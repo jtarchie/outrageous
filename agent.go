@@ -44,7 +44,7 @@ func (agent Agent) IsZero() bool {
 }
 
 // Identify an agent in the messages
-func (agent Agent) ToString() string {
+func (agent Agent) String() string {
 	return fmt.Sprintf(`{"assistant": {"name": %q, "instructions": %q}}`, agent.Name, agent.Instructions)
 }
 
