@@ -18,8 +18,8 @@ type Function struct {
 }
 type Functions []Function
 
-func (f *Functions) Add(function Function) {
-	*f = append(*f, function)
+func (f *Functions) Add(functions ...Function) {
+	*f = append(*f, functions...)
 }
 
 func (f *Functions) Get(name string) (Function, bool) {
@@ -48,6 +48,14 @@ func (f Functions) AsTools() []openai.Tool {
 
 type Caller interface {
 	Call(ctx context.Context) (any, error)
+}
+
+func MustWrapStruct(description string, s Caller) Function {
+	function, err := WrapStruct(description, s)
+	if err != nil {
+		panic(fmt.Sprintf("could not wrap struct: %v", err))
+	}
+	return function
 }
 
 func WrapStruct(description string, s Caller) (Function, error) {

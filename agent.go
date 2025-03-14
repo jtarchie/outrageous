@@ -19,7 +19,7 @@ type Agent struct {
 
 // AsFunction creates a function that returns the agent itself
 // This is useful for agent handoff scenarios where one agent can call another agent
-func (agent Agent) AsFunction(description string) Function {
+func (agent *Agent) AsFunction(description string) Function {
 	return Function{
 		Name:        agent.Name,
 		Description: description,
@@ -40,12 +40,12 @@ func (agent Agent) AsFunction(description string) Function {
 }
 
 // Know when the agent has no responsibility
-func (agent Agent) IsZero() bool {
+func (agent *Agent) IsZero() bool {
 	return agent.Name == "" && agent.Instructions == "" && len(agent.Functions) == 0
 }
 
 // Identify an agent in the messages
-func (agent Agent) String() string {
+func (agent *Agent) String() string {
 	return fmt.Sprintf(`{"assistant": {"name": %q, "instructions": %q}}`, agent.Name, agent.Instructions)
 }
 
@@ -54,30 +54,24 @@ type Messages []Message
 
 type Response struct {
 	Messages Messages
-	Agent    Agent
+	Agent    *Agent
 }
 
 // Run executes the agent's logic
 // It will continue to run until the agent has no more messages to process
 // or the maximum number of messages is reached.
-func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error) {
+func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, error) {
 	maxMessages := 10
 	activeAgent := agent
 
 	slog.Debug("agent.starting",
 		"agent_name", activeAgent.Name,
 		"max_messages", maxMessages,
-		"initial_messages_count", len(messages))
+		"initial_messages_count", len(messages),
+		"functions_count", len(activeAgent.Functions),
+	)
 
-	for {
-		if len(messages) >= maxMessages {
-			slog.Debug("agent.stopping",
-				"reason", "max_messages_reached",
-				"message_count", len(messages),
-				"max_messages", maxMessages)
-			break
-		}
-
+	for range maxMessages {
 		if activeAgent.IsZero() {
 			slog.Debug("agent.stopping",
 				"reason", "agent_is_zero",
@@ -106,6 +100,7 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 		}
 
 		message := response.Choices[0].Message
+		message.Name = activeAgent.Name
 		messages = append(messages, message)
 
 		slog.Debug("agent.received",
@@ -117,8 +112,7 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 			slog.Debug("agent.completed",
 				"agent_name", activeAgent.Name,
 				"reason", "no_tool_calls")
-			activeAgent = Agent{}
-			continue
+			break
 		}
 
 		for _, toolCall := range message.ToolCalls {
@@ -146,12 +140,14 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 					return nil, fmt.Errorf("could not call function: %w", err)
 				}
 
-				if nextAgent, ok := value.(Agent); ok {
+				if nextAgent, ok := value.(*Agent); ok {
 					slog.Debug("agent.handoff",
 						"from_agent", activeAgent.Name,
 						"to_agent", nextAgent.Name,
 						"function_name", functionName)
-					activeAgent = nextAgent
+					if !nextAgent.IsZero() {
+						activeAgent = nextAgent
+					}
 				} else {
 					slog.Debug("agent.function_result",
 						"agent_name", activeAgent.Name,
@@ -177,9 +173,8 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 	}
 
 	slog.Debug("agent.run_completed",
-		"agent_name", agent.Name,
-		"final_messages_count", len(messages),
-		"active_agent_is_zero", activeAgent.IsZero())
+		"agent_name", activeAgent.Name,
+		"final_messages_count", len(messages))
 
 	return &Response{
 		Messages: messages,
@@ -187,8 +182,8 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 	}, nil
 }
 
-func NewAgent(name, instructions string) Agent {
-	return Agent{
+func NewAgent(name, instructions string) *Agent {
+	return &Agent{
 		Name:         name,
 		Instructions: instructions,
 		Client:       DefaultClient,
