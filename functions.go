@@ -2,6 +2,8 @@ package outrageous
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -10,7 +12,7 @@ import (
 type Function struct {
 	Name        string
 	Description string
-	Parameters  jsonschema.Definition
+	Parameters  *jsonschema.Definition
 	Func        func(ctx context.Context, params map[string]any) (any, error)
 }
 type Functions []Function
@@ -41,5 +43,64 @@ func (f Functions) AsTools() []openai.Tool {
 		}
 	}
 	return tools
+}
 
+type Caller interface {
+	Call(ctx context.Context) (any, error)
+}
+
+func WrapStruct(description string, s Caller) (Function, error) {
+	instance := reflect.New(reflect.TypeOf(s))
+
+	schema, err := jsonschema.GenerateSchemaForType(instance)
+	if err != nil {
+		return Function{}, fmt.Errorf("could not generate schema: %w", err)
+	}
+
+	structName := reflect.TypeOf(s).Name()
+
+	return Function{
+		Name:        structName,
+		Description: description,
+		Parameters:  schema,
+		Func: func(ctx context.Context, params map[string]any) (any, error) {
+			// Create a new instance of the struct
+			instance := reflect.New(reflect.TypeOf(s)).Interface()
+
+			// Populate the struct with the parameters
+			for key, value := range params {
+				field := reflect.ValueOf(instance).Elem().FieldByName(key)
+				if !field.IsValid() {
+					// find field by json tag
+					for i := 0; i < reflect.TypeOf(s).NumField(); i++ {
+						fieldType := reflect.TypeOf(s).Field(i)
+						jsonTag := fieldType.Tag.Get("json")
+						if jsonTag == key {
+							field = reflect.ValueOf(instance).Elem().Field(i)
+							break
+						}
+					}
+				}
+
+				if field.IsValid() && field.CanSet() {
+					field.Set(reflect.ValueOf(value))
+				}
+			}
+
+			// Call the method on the struct
+			method := reflect.ValueOf(instance).MethodByName("Call")
+			if !method.IsValid() {
+				return nil, fmt.Errorf("method Call not found on struct %s", structName)
+			}
+
+			values := method.Call([]reflect.Value{reflect.ValueOf(ctx)})
+			// return the first value and error
+			err = nil
+			if !values[1].IsNil() {
+				err = values[1].Interface().(error)
+			}
+
+			return values[0].Interface(), err
+		},
+	}, nil
 }

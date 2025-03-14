@@ -22,7 +22,7 @@ func (agent Agent) AsFunction(description string) Function {
 	return Function{
 		Name:        agent.Name,
 		Description: description,
-		Parameters: jsonschema.Definition{
+		Parameters: &jsonschema.Definition{
 			Type: jsonschema.Object,
 			Properties: map[string]jsonschema.Definition{
 				"instruction": {
@@ -94,7 +94,6 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 			"agent_name", activeAgent.Name,
 			"model", activeAgent.Client.model,
 			"functions_count", len(activeAgent.Functions),
-			"completion", completion,
 		)
 
 		response, err := activeAgent.Client.CreateChatCompletion(
