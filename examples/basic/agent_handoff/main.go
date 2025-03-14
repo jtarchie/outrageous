@@ -45,5 +45,6 @@ func main() {
 	}
 
 	pp.Default.SetOmitEmpty(true)
+	pp.Default.SetExportedOnly(true)
 	pp.Print(response)
 }

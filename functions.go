@@ -25,7 +25,7 @@ func (f *Functions) Add(functions ...Function) {
 
 func (f *Functions) Get(name string) (Function, bool) {
 	for _, function := range *f {
-		if function.Name == name || toName(function.Name) == name {
+		if function.Name == name || toName(function.Name) == toName(name) {
 			return function, true
 		}
 	}

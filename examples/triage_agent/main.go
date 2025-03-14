@@ -68,6 +68,7 @@ func main() {
 		slog.Error("execute", "error", err)
 
 		pp.Default.SetOmitEmpty(true)
+		pp.Default.SetExportedOnly(true)
 		pp.Print(messages)
 	}
 }
