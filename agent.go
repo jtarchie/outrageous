@@ -182,10 +182,24 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 	}, nil
 }
 
-func NewAgent(name, instructions string) *Agent {
-	return &Agent{
+type AgentOption func(*Agent)
+
+func WithModel(model string) AgentOption {
+	return func(agent *Agent) {
+		agent.Client.model = model
+	}
+}
+
+func NewAgent(name, instructions string, options ...AgentOption) *Agent {
+	agent := &Agent{
 		Name:         name,
 		Instructions: instructions,
 		Client:       DefaultClient,
 	}
+
+	for _, option := range options {
+		option(agent)
+	}
+
+	return agent
 }
