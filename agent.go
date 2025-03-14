@@ -2,6 +2,7 @@ package outrageous
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -101,9 +102,6 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 			completion,
 		)
 		if err != nil {
-			slog.Debug("agent.error",
-				"error", err.Error(),
-				"agent_name", activeAgent.Name)
 			return nil, fmt.Errorf("could not chat completion: %w", err)
 		}
 
@@ -134,16 +132,17 @@ func (agent Agent) Run(ctx context.Context, messages Messages) (*Response, error
 			if function, found := activeAgent.Functions.Get(functionName); found {
 				params := map[string]any{}
 
+				err := json.Unmarshal([]byte(toolCall.Function.Arguments), &params)
+				if err != nil {
+					return nil, fmt.Errorf("could not unmarshal function arguments: %w", err)
+				}
+
 				slog.Debug("agent.executing_function",
 					"agent_name", activeAgent.Name,
 					"function_name", functionName)
 
 				value, err := function.Func(ctx, params)
 				if err != nil {
-					slog.Debug("agent.function_error",
-						"agent_name", activeAgent.Name,
-						"function_name", functionName,
-						"error", err.Error())
 					return nil, fmt.Errorf("could not call function: %w", err)
 				}
 

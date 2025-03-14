@@ -3,6 +3,7 @@ package outrageous
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"reflect"
 
 	openai "github.com/sashabaranov/go-openai"
@@ -50,31 +51,36 @@ type Caller interface {
 }
 
 func WrapStruct(description string, s Caller) (Function, error) {
-	instance := reflect.New(reflect.TypeOf(s))
+	structName := reflect.TypeOf(s).Name()
+	instance := reflect.New(reflect.TypeOf(s)).Interface()
 
 	schema, err := jsonschema.GenerateSchemaForType(instance)
 	if err != nil {
 		return Function{}, fmt.Errorf("could not generate schema: %w", err)
 	}
 
-	structName := reflect.TypeOf(s).Name()
+	slog.Debug("function.schema", "name", structName, "schema", schema, "instance", instance)
 
 	return Function{
 		Name:        structName,
 		Description: description,
 		Parameters:  schema,
 		Func: func(ctx context.Context, params map[string]any) (any, error) {
+			slog.Debug("function.call", "name", structName, "params", params)
+
 			// Create a new instance of the struct
 			instance := reflect.New(reflect.TypeOf(s)).Interface()
 
 			// Populate the struct with the parameters
 			for key, value := range params {
 				field := reflect.ValueOf(instance).Elem().FieldByName(key)
+				slog.Debug("function.call", "name", structName, "key", key, "value", value, "field", field)
 				if !field.IsValid() {
 					// find field by json tag
 					for i := 0; i < reflect.TypeOf(s).NumField(); i++ {
 						fieldType := reflect.TypeOf(s).Field(i)
 						jsonTag := fieldType.Tag.Get("json")
+						slog.Debug("function.call", "name", structName, "jsonTag", jsonTag, "key", key)
 						if jsonTag == key {
 							field = reflect.ValueOf(instance).Elem().Field(i)
 							break

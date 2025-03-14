@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"strings"
 
 	. "github.com/jtarchie/outrageous"
 	"github.com/k0kubun/pp/v3"
@@ -16,6 +17,10 @@ type GetWeather struct {
 }
 
 func (g GetWeather) Call(ctx context.Context) (any, error) {
+	if strings.Contains(strings.ToLower(g.Location), "nyc") {
+		return `{"temp":32, "unit":"F"}`, nil
+	}
+
 	return `{"temp":67, "unit":"F"}`, nil
 }
 
@@ -44,7 +49,7 @@ func main() {
 	response, err := agent.Run(
 		context.Background(),
 		Messages{
-			Message{Role: "user", Content: "Hi"},
+			Message{Role: "user", Content: "What's the weather in NYC?"},
 		},
 	)
 
