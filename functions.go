@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"reflect"
+	"regexp"
 
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -24,24 +25,30 @@ func (f *Functions) Add(functions ...Function) {
 
 func (f *Functions) Get(name string) (Function, bool) {
 	for _, function := range *f {
-		if function.Name == name {
+		if function.Name == name || toName(function.Name) == name {
 			return function, true
 		}
 	}
 	return Function{}, false
 }
 
+func toName(name string) string {
+	// name Must be alphameric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-), with a maximum length of 64
+	return regexp.MustCompile(`[^a-zA-Z0-9_.-]`).ReplaceAllString(name, "")
+}
+
 func (f Functions) AsTools() []openai.Tool {
-	tools := make([]openai.Tool, len(f))
-	for i, function := range f {
-		tools[i] = openai.Tool{
+	tools := []openai.Tool{}
+	for _, function := range f {
+		tools = append(tools, openai.Tool{
 			Type: openai.ToolTypeFunction,
 			Function: &openai.FunctionDefinition{
-				Name:        function.Name,
+				Name:        toName(function.Name),
 				Description: function.Description,
 				Parameters:  function.Parameters,
+				Strict:      true,
 			},
-		}
+		})
 	}
 	return tools
 }

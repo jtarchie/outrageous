@@ -6,6 +6,7 @@ import (
 	"os"
 
 	. "github.com/jtarchie/outrageous"
+	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
 )
 
@@ -62,8 +63,11 @@ func main() {
 		MustWrapStruct("Apply a discount to the user's cart", ApplyDiscount{}),
 	)
 
-	err = Demo(triageAgent)
+	messages, err := Demo(triageAgent)
 	if err != nil {
 		slog.Error("execute", "error", err)
+
+		pp.Default.SetOmitEmpty(true)
+		pp.Print(messages)
 	}
 }

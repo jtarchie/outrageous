@@ -21,7 +21,7 @@ type Agent struct {
 // This is useful for agent handoff scenarios where one agent can call another agent
 func (agent *Agent) AsFunction(description string) Function {
 	return Function{
-		Name:        agent.Name,
+		Name:        toName(agent.Name),
 		Description: description,
 		Parameters: &jsonschema.Definition{
 			Type: jsonschema.Object,
@@ -101,6 +101,14 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 		message := response.Choices[0].Message
 		message.Name = activeAgent.Name
+
+		// need to add toolcalls for gemini incompatibility
+		// https://discuss.ai.google.dev/t/tool-calling-with-openai-api-not-working/60140/4
+		for index := range message.ToolCalls {
+			if message.ToolCalls[index].ID == "" {
+				message.ToolCalls[index].ID = fmt.Sprintf("function-%d", index)
+			}
+		}
 		messages = append(messages, message)
 
 		slog.Debug("agent.received",
@@ -158,7 +166,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 				messages = append(messages, Message{
 					Role:       "tool",
 					ToolCallID: toolCall.ID,
-					Name:       toolCall.Function.Name,
+					Name:       functionName,
 					Content:    fmt.Sprintf("%s", value),
 				})
 
@@ -190,9 +198,15 @@ func WithModel(model string) AgentOption {
 	}
 }
 
+func WithClient(client *Client) AgentOption {
+	return func(agent *Agent) {
+		agent.Client = client
+	}
+}
+
 func NewAgent(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
-		Name:         name,
+		Name:         toName(name),
 		Instructions: instructions,
 		Client:       DefaultClient,
 	}

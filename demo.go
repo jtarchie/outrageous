@@ -4,11 +4,12 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 )
 
-func Demo(agent *Agent) error {
+func Demo(agent *Agent) (Messages, error) {
 	var messages Messages
 	var initLength int
 
@@ -33,7 +34,8 @@ func Demo(agent *Agent) error {
 			messages,
 		)
 		if err != nil {
-			return fmt.Errorf("error running agent: %w", err)
+			slog.Error("agent.run", "error", err, "messages", messages)
+			return messages, fmt.Errorf("error running agent: %w", err)
 		}
 		newMessages := response.Messages[initLength:]
 		for _, message := range newMessages {
@@ -58,5 +60,5 @@ func Demo(agent *Agent) error {
 		agent = response.Agent
 	}
 
-	return nil
+	return messages, nil
 }

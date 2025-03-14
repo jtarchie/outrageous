@@ -9,14 +9,11 @@ type Client struct {
 	model string
 }
 
-func ollamaConfig() openai.ClientConfig {
+func NewOllamaClient(model string) *Client {
 	config := openai.DefaultConfig("")
 	config.BaseURL = "http://localhost:11434/v1"
-	return config
-}
 
-func NewOllamaClient(model string) *Client {
-	client := openai.NewClientWithConfig(ollamaConfig())
+	client := openai.NewClientWithConfig(config)
 
 	return &Client{
 		Client: client,
@@ -24,4 +21,28 @@ func NewOllamaClient(model string) *Client {
 	}
 }
 
+// https://ai.google.dev/gemini-api/docs/openai
+func NewGeminiClient(apiToken, model string) *Client {
+	config := openai.DefaultConfig(apiToken)
+	config.BaseURL = "https://generativelanguage.googleapis.com/v1beta/openai"
+
+	client := openai.NewClientWithConfig(config)
+
+	return &Client{
+		Client: client,
+		model:  model,
+	}
+}
+
+func NewOpenAIClient(apiToken, model string) *Client {
+	config := openai.DefaultConfig(apiToken)
+	client := openai.NewClientWithConfig(config)
+
+	return &Client{
+		Client: client,
+		model:  model,
+	}
+}
+
+// this is a local model that can do function calling
 var DefaultClient *Client = NewOllamaClient("llama3.2")
