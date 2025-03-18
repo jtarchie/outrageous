@@ -13,14 +13,14 @@ import (
 type Agent struct {
 	Name         string
 	Instructions string
-	Functions    Functions
+	Tools        Tools
 	Client       *Client
 }
 
-// AsFunction creates a function that returns the agent itself
+// AsTool creates a tool that returns the agent itself
 // This is useful for agent handoff scenarios where one agent can call another agent
-func (agent *Agent) AsFunction(description string) Function {
-	return Function{
+func (agent *Agent) AsTool(description string) Tool {
+	return Tool{
 		Name:        toName(agent.Name),
 		Description: description,
 		Parameters: &jsonschema.Definition{
@@ -41,7 +41,7 @@ func (agent *Agent) AsFunction(description string) Function {
 
 // Know when the agent has no responsibility
 func (agent *Agent) IsZero() bool {
-	return agent.Name == "" && agent.Instructions == "" && len(agent.Functions) == 0
+	return agent.Name == "" && agent.Instructions == "" && len(agent.Tools) == 0
 }
 
 // Identify an agent in the messages
@@ -68,7 +68,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		"agent_name", activeAgent.Name,
 		"max_messages", maxMessages,
 		"initial_messages_count", len(messages),
-		"functions_count", len(activeAgent.Functions),
+		"tools_count", len(activeAgent.Tools),
 	)
 
 	for range maxMessages {
@@ -82,13 +82,13 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		completion := openai.ChatCompletionRequest{
 			Model:    activeAgent.Client.model,
 			Messages: messages,
-			Tools:    activeAgent.Functions.AsTools(),
+			Tools:    activeAgent.Tools.AsTools(),
 		}
 
 		slog.Debug("agent.requesting",
 			"agent_name", activeAgent.Name,
 			"model", activeAgent.Client.model,
-			"functions_count", len(activeAgent.Functions),
+			"tools_count", len(activeAgent.Tools),
 		)
 
 		response, err := activeAgent.Client.CreateChatCompletion(
@@ -106,7 +106,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		// https://discuss.ai.google.dev/t/tool-calling-with-openai-api-not-working/60140/4
 		for index := range message.ToolCalls {
 			if message.ToolCalls[index].ID == "" {
-				message.ToolCalls[index].ID = fmt.Sprintf("function-%d", index)
+				message.ToolCalls[index].ID = fmt.Sprintf("tool-%d", index)
 			}
 		}
 		messages = append(messages, message)
@@ -128,10 +128,10 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 			slog.Debug("agent.tool_call",
 				"agent_name", activeAgent.Name,
-				"function_name", functionName,
+				"tool_name", functionName,
 				"tool_call_id", toolCall.ID)
 
-			if function, found := activeAgent.Functions.Get(functionName); found {
+			if tool, found := activeAgent.Tools.Get(functionName); found {
 				params := map[string]any{}
 
 				err := json.Unmarshal([]byte(toolCall.Function.Arguments), &params)
@@ -141,9 +141,9 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 				slog.Debug("agent.executing_function",
 					"agent_name", activeAgent.Name,
-					"function_name", functionName)
+					"tool_name", functionName)
 
-				value, err := function.Func(ctx, params)
+				value, err := tool.Func(ctx, params)
 				if err != nil {
 					return nil, fmt.Errorf("could not call function: %w", err)
 				}
@@ -152,14 +152,14 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					slog.Debug("agent.handoff",
 						"from_agent", activeAgent.Name,
 						"to_agent", nextAgent.Name,
-						"function_name", functionName)
+						"tool_name", functionName)
 					if !nextAgent.IsZero() {
 						activeAgent = nextAgent
 					}
 				} else {
 					slog.Debug("agent.function_result",
 						"agent_name", activeAgent.Name,
-						"function_name", functionName,
+						"tool_name", functionName,
 						"result_type", fmt.Sprintf("%T", value))
 				}
 
@@ -174,8 +174,8 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			} else {
 				slog.Debug("agent.missing_function",
 					"agent_name", activeAgent.Name,
-					"function_name", functionName)
-				return nil, fmt.Errorf("function not found: %s", toolCall.Function.Name)
+					"tool_name", functionName)
+				return nil, fmt.Errorf("tool not found: %s", toolCall.Function.Name)
 			}
 		}
 	}

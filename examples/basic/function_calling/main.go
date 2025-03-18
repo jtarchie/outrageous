@@ -44,7 +44,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	agent.Functions.Add(fn)
+	agent.Tools.Add(fn)
 
 	response, err := agent.Run(
 		context.Background(),

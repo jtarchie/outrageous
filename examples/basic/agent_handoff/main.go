@@ -31,7 +31,7 @@ func main() {
 		"You only speak Spanish",
 	)
 
-	englishAgent.Functions.Add(spanishAgent.AsFunction("Transfer spanish speaking users immediately"))
+	englishAgent.Tools.Add(spanishAgent.AsTool("Transfer spanish speaking users immediately"))
 
 	response, err := englishAgent.Run(
 		context.Background(),

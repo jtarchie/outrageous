@@ -50,15 +50,15 @@ func main() {
 		"Help the user with a refund. If the reason is that it was too expensive, offer the user a refund code. If they insist, then process the refund.",
 	)
 
-	triageAgent.Functions.Add(
-		salesAgent.AsFunction("Transfer the conversation to the sales agent."),
-		refundsAgent.AsFunction("Transfer the conversation to the refunds agent."),
+	triageAgent.Tools.Add(
+		salesAgent.AsTool("Transfer the conversation to the sales agent."),
+		refundsAgent.AsTool("Transfer the conversation to the refunds agent."),
 	)
-	salesAgent.Functions.Add(
-		triageAgent.AsFunction("Call this function if a user is asking about a topic that is not handled by the current agent."),
+	salesAgent.Tools.Add(
+		triageAgent.AsTool("Call this function if a user is asking about a topic that is not handled by the current agent."),
 	)
-	refundsAgent.Functions.Add(
-		triageAgent.AsFunction("Call this function if a user is asking about a topic that is not handled by the current agent."),
+	refundsAgent.Tools.Add(
+		triageAgent.AsTool("Call this function if a user is asking about a topic that is not handled by the current agent."),
 		MustWrapStruct("Refund an item. Refund an item. Make sure you have the item_id of the form item_... Ask for user confirmation before processing the refund", ProcessRefund{}),
 		MustWrapStruct("Apply a discount to the user's cart", ApplyDiscount{}),
 	)

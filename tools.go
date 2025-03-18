@@ -11,25 +11,25 @@ import (
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
-type Function struct {
+type Tool struct {
 	Name        string
 	Description string
 	Parameters  *jsonschema.Definition
 	Func        func(ctx context.Context, params map[string]any) (any, error)
 }
-type Functions []Function
+type Tools []Tool
 
-func (f *Functions) Add(functions ...Function) {
-	*f = append(*f, functions...)
+func (f *Tools) Add(tools ...Tool) {
+	*f = append(*f, tools...)
 }
 
-func (f *Functions) Get(name string) (Function, bool) {
-	for _, function := range *f {
-		if function.Name == name || toName(function.Name) == toName(name) {
-			return function, true
+func (f *Tools) Get(name string) (Tool, bool) {
+	for _, tool := range *f {
+		if tool.Name == name || toName(tool.Name) == toName(name) {
+			return tool, true
 		}
 	}
-	return Function{}, false
+	return Tool{}, false
 }
 
 func toName(name string) string {
@@ -37,15 +37,15 @@ func toName(name string) string {
 	return regexp.MustCompile(`[^a-zA-Z0-9_.-]`).ReplaceAllString(name, "")
 }
 
-func (f Functions) AsTools() []openai.Tool {
+func (f Tools) AsTools() []openai.Tool {
 	tools := []openai.Tool{}
-	for _, function := range f {
+	for _, tool := range f {
 		tools = append(tools, openai.Tool{
 			Type: openai.ToolTypeFunction,
 			Function: &openai.FunctionDefinition{
-				Name:        toName(function.Name),
-				Description: function.Description,
-				Parameters:  function.Parameters,
+				Name:        toName(tool.Name),
+				Description: tool.Description,
+				Parameters:  tool.Parameters,
 				Strict:      true,
 			},
 		})
@@ -57,31 +57,31 @@ type Caller interface {
 	Call(ctx context.Context) (any, error)
 }
 
-func MustWrapStruct(description string, s Caller) Function {
-	function, err := WrapStruct(description, s)
+func MustWrapStruct(description string, s Caller) Tool {
+	tool, err := WrapStruct(description, s)
 	if err != nil {
 		panic(fmt.Sprintf("could not wrap struct: %v", err))
 	}
-	return function
+	return tool
 }
 
-func WrapStruct(description string, s Caller) (Function, error) {
+func WrapStruct(description string, s Caller) (Tool, error) {
 	structName := reflect.TypeOf(s).Name()
 	instance := reflect.New(reflect.TypeOf(s)).Interface()
 
 	schema, err := jsonschema.GenerateSchemaForType(instance)
 	if err != nil {
-		return Function{}, fmt.Errorf("could not generate schema: %w", err)
+		return Tool{}, fmt.Errorf("could not generate schema: %w", err)
 	}
 
-	slog.Debug("function.schema", "name", structName, "schema", schema, "instance", instance)
+	slog.Debug("tool.schema", "name", structName, "schema", schema, "instance", instance)
 
-	return Function{
+	return Tool{
 		Name:        structName,
 		Description: description,
 		Parameters:  schema,
 		Func: func(ctx context.Context, params map[string]any) (any, error) {
-			slog.Debug("function.call", "name", structName, "params", params)
+			slog.Debug("tool.call", "name", structName, "params", params)
 
 			// Create a new instance of the struct
 			instance := reflect.New(reflect.TypeOf(s)).Interface()
@@ -89,13 +89,13 @@ func WrapStruct(description string, s Caller) (Function, error) {
 			// Populate the struct with the parameters
 			for key, value := range params {
 				field := reflect.ValueOf(instance).Elem().FieldByName(key)
-				slog.Debug("function.call", "name", structName, "key", key, "value", value, "field", field)
+				slog.Debug("tool.call", "name", structName, "key", key, "value", value, "field", field)
 				if !field.IsValid() {
 					// find field by json tag
 					for i := 0; i < reflect.TypeOf(s).NumField(); i++ {
 						fieldType := reflect.TypeOf(s).Field(i)
 						jsonTag := fieldType.Tag.Get("json")
-						slog.Debug("function.call", "name", structName, "jsonTag", jsonTag, "key", key)
+						slog.Debug("tool.call", "name", structName, "jsonTag", jsonTag, "key", key)
 						if jsonTag == key {
 							field = reflect.ValueOf(instance).Elem().Field(i)
 							break
