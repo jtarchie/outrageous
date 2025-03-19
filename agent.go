@@ -8,6 +8,7 @@ import (
 
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
+	"github.com/tiendc/go-deepcopy"
 )
 
 type Agent struct {
@@ -194,6 +195,11 @@ type AgentOption func(*Agent)
 
 func WithModel(model string) AgentOption {
 	return func(agent *Agent) {
+		// deep copy the client
+		var client Client
+		_ = deepcopy.Copy(&client, agent.Client)
+		
+		agent.Client = &client
 		agent.Client.model = model
 	}
 }

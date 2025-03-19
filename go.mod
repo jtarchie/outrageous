@@ -7,6 +7,7 @@ require (
 	github.com/k0kubun/pp/v3 v3.4.1
 	github.com/lmittmann/tint v1.0.7
 	github.com/sashabaranov/go-openai v1.38.0
+	github.com/tiendc/go-deepcopy v1.5.0
 )
 
 require (
