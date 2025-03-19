@@ -1,12 +1,6 @@
 # Ask questions against a website
 
 ```bash
-User: What is the current area open in https://eldora.com?
-Mar 19 13:52:20.423 DBG agent.starting agent_name=WebpageScraper max_messages=10 initial_messages_count=1 tools_count=1
-Mar 19 13:52:20.423 DBG agent.requesting agent_name=WebpageScraper model=llama3.2 tools_count=1
-Mar 19 13:52:21.272 DBG agent.received agent_name=WebpageScraper has_content=true tool_calls_count=0
-Mar 19 13:52:21.272 DBG agent.completed agent_name=WebpageScraper reason=no_tool_calls
-Mar 19 13:52:21.272 DBG agent.run_completed agent_name=WebpageScraper final_messages_count=2
 WebpageScraper: {"name":"WebPage","parameters{""","url":"https://eldora.com"}}
 User: What is the current area open in https://eldora.com?
 Mar 19 13:52:35.090 DBG agent.starting agent_name=WebpageScraper max_messages=10 initial_messages_count=3 tools_count=1
