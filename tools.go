@@ -20,7 +20,10 @@ type Tool struct {
 type Tools []Tool
 
 func (f *Tools) Add(tools ...Tool) {
-	*f = append(*f, tools...)
+	for _, tool := range tools {
+		slog.Debug("agent.tools.add", "name", tool.Name, "description", tool.Description)
+		*f = append(*f, tool)
+	}
 }
 
 func (f *Tools) Get(name string) (Tool, bool) {
@@ -107,6 +110,8 @@ func WrapStruct(description string, s Caller) (Tool, error) {
 					field.Set(reflect.ValueOf(value))
 				}
 			}
+
+			slog.Debug("tool.call", "name", structName, "instance", instance)
 
 			// Call the method on the struct
 			method := reflect.ValueOf(instance).MethodByName("Call")
