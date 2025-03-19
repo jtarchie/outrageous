@@ -51,7 +51,7 @@ func Demo(agent *Agent) (Messages, error) {
 				fmt.Println("")
 				for _, toolCall := range message.ToolCalls {
 
-					fmt.Printf("\033[95m%s\033[0m(%s)\n", toolCall.Function.Name, strings.ReplaceAll(toolCall.Function.Arguments, ":", "="))
+					fmt.Printf("\033[95m%s\033[0m(%s)\n", toolCall.Function.Name, toolCall.Function.Arguments)
 				}
 			}
 		}
