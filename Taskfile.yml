@@ -7,3 +7,4 @@ tasks:
       # - deno lint .
       - gofmt -w .
       - golangci-lint run ./... --fix
+      - go run examples/basic/bare_minimum/main.go
