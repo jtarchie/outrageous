@@ -1,4 +1,9 @@
-# Ask questions against a website
+# Ask a question about a website
+
+This allows a URL to be provided, then scraped, so the user can ask questions
+against it.
+
+## Example output
 
 ```bash
 WebpageScraper: {"name":"WebPage","parameters{""","url":"https://eldora.com"}}
@@ -21,3 +26,16 @@ WebpageScraper:
 WebPage({"url"="https=//eldora.com"})
 WebpageScraper: The current area open in https://eldora.com is 680 acres of alpine terrain with 3 inches of new snow overnight and up to 3 additional inches forecasted today, offering ideal conditions for skiing and riding. There are only five weeks left in the season, so it's a great day to come up and enjoy the mountain while it's less busy.
 ```
+
+## Models Tested
+
+### Worked
+
+- gemini-2.0-pro-exp
+- gemini-1.5-pro
+- gemini-1.5-flash-8b
+- llama3.2:3b
+
+### Did not work
+
+- gemini-1.5-flash

@@ -22,11 +22,11 @@ func main() {
 
 	agent := NewAgent(
 		"Webpage Scraper",
-		"Answers questions about webpage content.",
+		"Answers questions about webpage content by scraping and analyzing the data from the provided URLs. Please use the provided tool to scrape the webpage.",
+		// WithClient(NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-1.5-flash-8b")),
 	)
 
-	agent.Tools.Add(MustWrapStruct("read contents of a webpage", tools.WebPage{}))
-
+	agent.Tools.Add(MustWrapStruct("This tool enables the agent to read and extract contents from an external website, providing structured data for further analysis.", tools.WebPage{}))
 
 	messages, err := Demo(agent)
 	if err != nil {

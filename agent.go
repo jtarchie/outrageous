@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
@@ -22,8 +23,12 @@ type Agent struct {
 // This is useful for agent handoff scenarios where one agent can call another agent
 func (agent *Agent) AsTool(description string) Tool {
 	return Tool{
-		Name:        toName(agent.Name),
-		Description: description,
+		Name: toName(agent.Name),
+		Description: fmt.Sprintf(strings.TrimSpace(`
+			You are a helpful agent that has the following instructions:
+
+			%s
+		`), description),
 		Parameters: &jsonschema.Definition{
 			Type: jsonschema.Object,
 			Properties: map[string]jsonschema.Definition{
@@ -198,7 +203,7 @@ func WithModel(model string) AgentOption {
 		// deep copy the client
 		var client Client
 		_ = deepcopy.Copy(&client, agent.Client)
-		
+
 		agent.Client = &client
 		agent.Client.model = model
 	}

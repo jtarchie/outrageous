@@ -8,7 +8,7 @@ import (
 )
 
 type WebPage struct {
-	Url         string `json:"url"`
+	Url string `json:"url"`
 }
 
 type WebPageResponse struct {
