@@ -1,4 +1,4 @@
-package outrageous
+package agent
 
 import (
 	"bufio"
