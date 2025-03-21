@@ -7,16 +7,16 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/jtarchie/outrageous/client"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
-	"github.com/tiendc/go-deepcopy"
 )
 
 type Agent struct {
 	name         string
 	instructions string
 	Tools        Tools
-	client       *Client
+	client       *client.Client
 }
 
 // AsTool creates a tool that returns the agent itself
@@ -86,14 +86,14 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		}
 
 		completion := openai.ChatCompletionRequest{
-			Model:    activeAgent.client.model,
+			Model:    activeAgent.client.ModelName(),
 			Messages: messages,
 			Tools:    activeAgent.Tools.AsTools(),
 		}
 
 		slog.Debug("agent.requesting",
 			"agent_name", activeAgent.name,
-			"model", activeAgent.client.model,
+			"model", activeAgent.client.ModelName(),
 			"tools_count", len(activeAgent.Tools),
 		)
 
@@ -198,18 +198,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 type AgentOption func(*Agent)
 
-func WithModel(model string) AgentOption {
-	return func(agent *Agent) {
-		// deep copy the client
-		var client Client
-		_ = deepcopy.Copy(&client, agent.client)
-
-		agent.client = &client
-		agent.client.model = model
-	}
-}
-
-func WithClient(client *Client) AgentOption {
+func WithClient(client *client.Client) AgentOption {
 	return func(agent *Agent) {
 		agent.client = client
 	}
@@ -219,7 +208,7 @@ func New(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
 		name:         toName(name),
 		instructions: instructions,
-		client:       DefaultClient,
+		client:       client.DefaultClient,
 	}
 
 	for _, option := range options {
