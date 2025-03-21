@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	. "github.com/jtarchie/outrageous"
+	. "github.com/jtarchie/outrageous/agent"
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
 )

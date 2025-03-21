@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	. "github.com/jtarchie/outrageous"
+	. "github.com/jtarchie/outrageous/agent"
 	"github.com/jtarchie/outrageous/tools"
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
