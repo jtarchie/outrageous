@@ -20,7 +20,7 @@ func main() {
 		Level: logLevel,
 	})))
 
-	agent := NewAgent(
+	agent := New(
 		"Webpage Scraper",
 		"Answers questions about webpage content by scraping and analyzing the data from the provided URLs. Please use the provided tool to scrape the webpage.",
 		// WithClient(NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-1.5-flash-8b")),

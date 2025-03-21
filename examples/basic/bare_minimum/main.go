@@ -21,7 +21,7 @@ func main() {
 		Level: logLevel,
 	})))
 
-	agent := NewAgent(
+	agent := New(
 		"Agent",
 		"You are a helpful agent.",
 	)

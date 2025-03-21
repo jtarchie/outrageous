@@ -21,12 +21,12 @@ func main() {
 		Level: logLevel,
 	})))
 
-	englishAgent := NewAgent(
+	englishAgent := New(
 		"English Agent",
 		"You only speak English",
 	)
 
-	spanishAgent := NewAgent(
+	spanishAgent := New(
 		"Spanish Agent",
 		"You only speak Spanish",
 	)

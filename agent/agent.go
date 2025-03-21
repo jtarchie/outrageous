@@ -13,17 +13,17 @@ import (
 )
 
 type Agent struct {
-	Name         string
-	Instructions string
+	name         string
+	instructions string
 	Tools        Tools
-	Client       *Client
+	client       *Client
 }
 
 // AsTool creates a tool that returns the agent itself
 // This is useful for agent handoff scenarios where one agent can call another agent
 func (agent *Agent) AsTool(description string) Tool {
 	return Tool{
-		Name: toName(agent.Name),
+		Name: toName(agent.name),
 		Description: fmt.Sprintf(strings.TrimSpace(`
 			You are a helpful agent that has the following instructions:
 
@@ -47,12 +47,12 @@ func (agent *Agent) AsTool(description string) Tool {
 
 // Know when the agent has no responsibility
 func (agent *Agent) IsZero() bool {
-	return agent.Name == "" && agent.Instructions == "" && len(agent.Tools) == 0
+	return agent.name == "" && agent.instructions == "" && len(agent.Tools) == 0
 }
 
 // Identify an agent in the messages
 func (agent *Agent) String() string {
-	return fmt.Sprintf(`{"assistant": {"name": %q, "instructions": %q}}`, agent.Name, agent.Instructions)
+	return fmt.Sprintf(`{"assistant": {"name": %q, "instructions": %q}}`, agent.name, agent.instructions)
 }
 
 type Message = openai.ChatCompletionMessage
@@ -71,7 +71,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 	activeAgent := agent
 
 	slog.Debug("agent.starting",
-		"agent_name", activeAgent.Name,
+		"agent_name", activeAgent.name,
 		"max_messages", maxMessages,
 		"initial_messages_count", len(messages),
 		"tools_count", len(activeAgent.Tools),
@@ -81,23 +81,23 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		if activeAgent.IsZero() {
 			slog.Debug("agent.stopping",
 				"reason", "agent_is_zero",
-				"agent_name", activeAgent.Name)
+				"agent_name", activeAgent.name)
 			break
 		}
 
 		completion := openai.ChatCompletionRequest{
-			Model:    activeAgent.Client.model,
+			Model:    activeAgent.client.model,
 			Messages: messages,
 			Tools:    activeAgent.Tools.AsTools(),
 		}
 
 		slog.Debug("agent.requesting",
-			"agent_name", activeAgent.Name,
-			"model", activeAgent.Client.model,
+			"agent_name", activeAgent.name,
+			"model", activeAgent.client.model,
 			"tools_count", len(activeAgent.Tools),
 		)
 
-		response, err := activeAgent.Client.CreateChatCompletion(
+		response, err := activeAgent.client.CreateChatCompletion(
 			ctx,
 			completion,
 		)
@@ -106,7 +106,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		}
 
 		message := response.Choices[0].Message
-		message.Name = activeAgent.Name
+		message.Name = activeAgent.name
 
 		// need to add toolcalls for gemini incompatibility
 		// https://discuss.ai.google.dev/t/tool-calling-with-openai-api-not-working/60140/4
@@ -118,13 +118,13 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		messages = append(messages, message)
 
 		slog.Debug("agent.received",
-			"agent_name", activeAgent.Name,
+			"agent_name", activeAgent.name,
 			"has_content", message.Content != "",
 			"tool_calls_count", len(message.ToolCalls))
 
 		if len(message.ToolCalls) == 0 {
 			slog.Debug("agent.completed",
-				"agent_name", activeAgent.Name,
+				"agent_name", activeAgent.name,
 				"reason", "no_tool_calls")
 			break
 		}
@@ -133,7 +133,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			functionName := toolCall.Function.Name
 
 			slog.Debug("agent.tool_call",
-				"agent_name", activeAgent.Name,
+				"agent_name", activeAgent.name,
 				"tool_name", functionName,
 				"tool_call_id", toolCall.ID)
 
@@ -146,7 +146,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 				}
 
 				slog.Debug("agent.executing_function",
-					"agent_name", activeAgent.Name,
+					"agent_name", activeAgent.name,
 					"tool_name", functionName)
 
 				value, err := tool.Func(ctx, params)
@@ -156,15 +156,15 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 				if nextAgent, ok := value.(*Agent); ok {
 					slog.Debug("agent.handoff",
-						"from_agent", activeAgent.Name,
-						"to_agent", nextAgent.Name,
+						"from_agent", activeAgent.name,
+						"to_agent", nextAgent.name,
 						"tool_name", functionName)
 					if !nextAgent.IsZero() {
 						activeAgent = nextAgent
 					}
 				} else {
 					slog.Debug("agent.function_result",
-						"agent_name", activeAgent.Name,
+						"agent_name", activeAgent.name,
 						"tool_name", functionName,
 						"result_type", fmt.Sprintf("%T", value))
 				}
@@ -179,7 +179,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 				break
 			} else {
 				slog.Debug("agent.missing_function",
-					"agent_name", activeAgent.Name,
+					"agent_name", activeAgent.name,
 					"tool_name", functionName)
 				return nil, fmt.Errorf("tool not found: %s", toolCall.Function.Name)
 			}
@@ -187,7 +187,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 	}
 
 	slog.Debug("agent.run_completed",
-		"agent_name", activeAgent.Name,
+		"agent_name", activeAgent.name,
 		"final_messages_count", len(messages))
 
 	return &Response{
@@ -202,24 +202,24 @@ func WithModel(model string) AgentOption {
 	return func(agent *Agent) {
 		// deep copy the client
 		var client Client
-		_ = deepcopy.Copy(&client, agent.Client)
+		_ = deepcopy.Copy(&client, agent.client)
 
-		agent.Client = &client
-		agent.Client.model = model
+		agent.client = &client
+		agent.client.model = model
 	}
 }
 
 func WithClient(client *Client) AgentOption {
 	return func(agent *Agent) {
-		agent.Client = client
+		agent.client = client
 	}
 }
 
-func NewAgent(name, instructions string, options ...AgentOption) *Agent {
+func New(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
-		Name:         toName(name),
-		Instructions: instructions,
-		Client:       DefaultClient,
+		name:         toName(name),
+		instructions: instructions,
+		client:       DefaultClient,
 	}
 
 	for _, option := range options {

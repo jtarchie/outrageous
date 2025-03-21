@@ -37,15 +37,15 @@ func main() {
 		Level: logLevel,
 	})))
 
-	triageAgent := NewAgent(
+	triageAgent := New(
 		"Triage Agent",
 		"Determine which agent is best suited to handle the user's request, and transfer the conversation to that agent.",
 	)
-	salesAgent := NewAgent(
+	salesAgent := New(
 		"Sales Agent",
 		"Be super enthusiastic about selling bees.",
 	)
-	refundsAgent := NewAgent(
+	refundsAgent := New(
 		"Refunds Agent",
 		"Help the user with a refund. If the reason is that it was too expensive, offer the user a refund code. If they insist, then process the refund.",
 	)
