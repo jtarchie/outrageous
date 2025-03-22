@@ -1,1 +1,3 @@
 .envrc
+.onnx_local_cache/
+*.sqlite
