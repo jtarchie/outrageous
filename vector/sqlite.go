@@ -68,11 +68,14 @@ func NewSQLite(filename string, vectorDim int) (*SQLite, error) {
 	if len(hyperplanes) == 0 {
 		numHyperplanes := int(min(64, 10*math.Log2(float64(vectorDim))))
 
+		// Create a deterministic random source with fixed seed
+		src := rand.New(rand.NewPCG(1234, 5678)) // Using fixed seed values
+
 		hyperplanes = make(Hyperplanes, numHyperplanes)
 		for i := range hyperplanes {
 			hyperplanes[i] = make([]float64, vectorDim)
 			for j := range hyperplanes[i] {
-				hyperplanes[i][j] = rand.NormFloat64()
+				hyperplanes[i][j] = src.NormFloat64() // Use deterministic source
 			}
 		}
 
@@ -182,7 +185,7 @@ func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 				1=1
 			ORDER BY
 				distance ASC
-			LIMIT 10
+			LIMIT 100
 		`,
 		sql.Named("hash", *(*int64)(unsafe.Pointer(&hash))), // Convert uint64 to int64
 	)
@@ -201,6 +204,10 @@ func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Similarity > results[j].Similarity
 	})
+
+	if len(results) > 10 {
+		results = results[:10]
+	}
 
 	return results, nil
 }

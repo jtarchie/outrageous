@@ -15,7 +15,25 @@ import (
 	"github.com/jtarchie/outrageous/vector"
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
+	"github.com/samber/lo"
 )
+
+func Cons[T any](elements []T, size int) [][]T {
+	if size == 1 {
+		return [][]T{elements}
+	}
+
+	var results [][]T
+	for index := range elements {
+		if index+size <= len(elements) {
+			results = append(results, elements[index:index+size])
+		} else {
+			break
+		}
+	}
+
+	return results
+}
 
 func main() {
 	var logLevel slog.Level
@@ -43,6 +61,7 @@ func execute() error {
 	}
 
 	db, err := vector.NewSQLite(":memory:", 768)
+	// db, err := vector.NewChromem()
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite database: %w", err)
 	}
@@ -54,29 +73,33 @@ func execute() error {
 	}
 	defer file.Close()
 
-	chunks := [][]string{[]string{}}
-	maxChunkSize := 256
-
+	lines := []string{}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if len(line) > 0 {
-			chunks[len(chunks)-1] = append(chunks[len(chunks)-1], "passage: "+line)
-		}
-		if len(chunks[len(chunks)-1]) == maxChunkSize {
-			chunks = append(chunks, []string{})
+			lines = append(lines, line)
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
-	slog.Info("embedding", "chunks", len(chunks), "max_chunk_size", maxChunkSize)
+	maxChunkSize := 256
+	slog.Info("embedding", "lines", len(lines))
+	chunks := lo.Chunk(
+		lo.Map(
+			Cons(lines, 2),
+			func(element []string, _ int) string {
+				return strings.Join(element, " ")
+			},
+		),
+		maxChunkSize)
 
 	for chunkIndex, chunk := range chunks {
 		slog.Info("chunk", "index", chunkIndex, "size", len(chunk))
 
-		embeddings, err := model.Embed(chunk, len(chunk))
+		embeddings, err := model.PassageEmbed(chunk, len(chunk))
 		if err != nil {
 			return fmt.Errorf("failed to embed chunk: %w", err)
 		}
