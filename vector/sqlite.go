@@ -75,7 +75,7 @@ func NewSQLite(filename string, vectorDim int) (*SQLite, error) {
 		for i := range hyperplanes {
 			hyperplanes[i] = make([]float64, vectorDim)
 			for j := range hyperplanes[i] {
-				hyperplanes[i][j] = src.NormFloat64() // Use deterministic source
+				hyperplanes[i][j] = src.Float64() - 0.5 // Use deterministic source
 			}
 		}
 

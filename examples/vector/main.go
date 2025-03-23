@@ -19,10 +19,6 @@ import (
 )
 
 func Cons[T any](elements []T, size int) [][]T {
-	if size == 1 {
-		return [][]T{elements}
-	}
-
 	var results [][]T
 	for index := range elements {
 		if index+size <= len(elements) {
@@ -89,7 +85,7 @@ func execute() error {
 	slog.Info("embedding", "lines", len(lines))
 	chunks := lo.Chunk(
 		lo.Map(
-			Cons(lines, 2),
+			Cons(lines, 1),
 			func(element []string, _ int) string {
 				return strings.Join(element, " ")
 			},
@@ -99,7 +95,7 @@ func execute() error {
 	for chunkIndex, chunk := range chunks {
 		slog.Info("chunk", "index", chunkIndex, "size", len(chunk))
 
-		embeddings, err := model.PassageEmbed(chunk, len(chunk))
+		embeddings, err := model.Embed(chunk, len(chunk))
 		if err != nil {
 			return fmt.Errorf("failed to embed chunk: %w", err)
 		}
@@ -118,14 +114,14 @@ func execute() error {
 		}
 	}
 
-	query, err := model.QueryEmbed("that is the question")
+	query, err := model.Embed([]string{"that is the question"}, 0)
 	if err != nil {
 		return fmt.Errorf("failed to embed query: %w", err)
 	}
 
 	slog.Info("query", "embedding", len(query))
 
-	results, err := db.Query(context.Background(), query)
+	results, err := db.Query(context.Background(), query[0])
 	if err != nil {
 		return fmt.Errorf("failed to query database: %w", err)
 	}
