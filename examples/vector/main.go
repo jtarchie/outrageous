@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/anush008/fastembed-go"
-	"github.com/jtarchie/outrageous/vector"
+	"github.com/jtarchie/outrageous/experimental/vector"
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
 	"github.com/samber/lo"
