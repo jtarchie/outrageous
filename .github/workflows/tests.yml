@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/cache@v4
         with:
-          path: .ollama
+          path: ~/.ollama
           key: ollama-models
       - uses: denoland/setup-deno@v1
       - uses: actions/checkout@v4
