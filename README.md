@@ -171,6 +171,31 @@ func main() {
 }
 ```
 
+These are examples of using different clients:
+
+- OpenAI:
+
+  ```go
+  client.NewGeminiClient(os.Getenv("OPENAI_API_KEY"), "gpt-4o")
+  ```
+
+- Ollama:
+
+  ```go
+  client.NewOllamaClient("llama3.2") // this is our default client
+  ```
+
+- Gemini:
+
+  ```go
+  client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "claude-3-5-sonnet-latest")
+  ```
+- Anthropic:
+
+  ```go
+  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest"),
+  ```
+
 ## Testing
 
 All [examples](examples/) are tested against [Ollama](https://ollama.com) and

@@ -13,7 +13,7 @@ func TestBareMinimum(t *testing.T) {
 
 	response, err := BasicExample()
 	a.Expect(err).NotTo(gomega.HaveOccurred())
-	
+
 	a.Expect(response.Messages).To(gomega.HaveLen(2))
 	a.Expect(response.Agent.Name()).To(gomega.Equal("HelpfulAgent"))
 
