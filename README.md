@@ -175,3 +175,14 @@ func main() {
 
 All [examples](examples/) are tested against [Ollama](https://ollama.com) and
 [llama3.2:3b](https://ollama.com/library/llama3.2).
+
+```bash
+brew bundle # should work on Linux and Mac
+
+# in a tab far away
+ollama start
+
+#in another tab
+ollama pull llama3.2
+task test
+```
