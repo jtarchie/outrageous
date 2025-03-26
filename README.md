@@ -174,4 +174,4 @@ func main() {
 ## Testing
 
 All [examples](examples/) are tested against [Ollama](https://ollama.com) and
-[llama3.1:8b](https://ollama.com/library/llama3.1).
+[llama3.2:3b](https://ollama.com/library/llama3.2).
