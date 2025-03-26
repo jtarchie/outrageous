@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -27,17 +28,28 @@ func main() {
 		// WithClient(NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-1.5-flash-8b")),
 	)
 
-	agent.Tools.Add(MustWrapStruct("This tool enables the agent to read and extract contents from an external website, providing structured data for further analysis.", tools.WebPage{}))
+	// this uses the web page scraper tool provided by the outrageous library
+	agent.Tools.Add(
+		MustWrapStruct(
+			"This tool enables the agent to read and extract contents from an external website, providing structured data for further analysis.",
+			tools.WebPage{},
+		),
+	)
 
-	messages, err := Demo(agent)
+	response, err := agent.Run(
+		context.Background(),
+		Messages{
+			Message{Role: "user", Content: "Please read the weather report from https://eldora.com?"},
+		},
+	)
 	if err != nil {
 		slog.Error("execute", "error", err)
+	}
 
-		pp.Default.SetOmitEmpty(true)
-		pp.Default.SetExportedOnly(true)
-		_, err = pp.Print(messages)
-		if err != nil {
-			log.Fatal(err)
-		}
+	pp.Default.SetOmitEmpty(true)
+	pp.Default.SetExportedOnly(true)
+	_, err = pp.Print(response)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

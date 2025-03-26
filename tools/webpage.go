@@ -7,16 +7,19 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
+// tool that will scrape a webpage and return the title, description, and body
 type WebPage struct {
 	Url string `json:"url"`
 }
 
+// the page response, which will be returned to the agent
 type WebPageResponse struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Body        string `json:"body"`
 }
 
+// this uses a full headless web browser to scrape the page
 func (w WebPage) Call(ctx context.Context) (any, error) {
 	ctx, cancel := chromedp.NewContext(ctx)
 	defer cancel()

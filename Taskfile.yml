@@ -7,4 +7,9 @@ tasks:
       # - deno lint .
       - gofmt -w .
       - golangci-lint run ./... --fix
+  test:
+    cmds:
       - go run examples/basic/bare_minimum/main.go
+      - go run examples/basic/agent_handoff/main.go
+      - go run examples/basic/function_calling/main.go
+      - go run examples/basic/scrape_webpage/main.go
