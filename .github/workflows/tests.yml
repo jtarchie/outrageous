@@ -21,7 +21,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: ai-action/setup-ollama@v1
       - run: ollama pull llama3.1:latest
-      - name: Task
-        run: task
+      # - name: Task
+      #   run: task
       - name: Test
         run: task test
