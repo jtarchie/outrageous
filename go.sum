@@ -87,8 +87,8 @@ github.com/sugarme/regexpset v0.0.0-20200920021344-4d4ec8eaf93c h1:pwb4kNSHb4K89
 github.com/sugarme/regexpset v0.0.0-20200920021344-4d4ec8eaf93c/go.mod h1:2gwkXLWbDGUQWeL3RtpCmcY4mzCtU13kb9UsAg9xMaw=
 github.com/sugarme/tokenizer v0.2.3-0.20230829214935-448e79b1ed65 h1:pvTWMhJbXsmFwjLT2T1qz/p4csuFko4NcM3/BUF7Sj8=
 github.com/sugarme/tokenizer v0.2.3-0.20230829214935-448e79b1ed65/go.mod h1:2MKkQ/K0zFUFO4inPZ8rQaz+sJVz62LhbQG83rcuITA=
-github.com/yalue/onnxruntime_go v1.18.0 h1:9/NZjgFeS4kOX8/kG5nMw1AxrLaREyvHRh7gTrred8Q=
-github.com/yalue/onnxruntime_go v1.18.0/go.mod h1:b4X26A8pekNb1ACJ58wAXgNKeUCGEAQ9dmACut9Sm/4=
+github.com/yalue/onnxruntime_go v1.19.0 h1:+qCu7/Nzrr/TY7B3sMy9sOATegP2qbtXn4b7q90fDOo=
+github.com/yalue/onnxruntime_go v1.19.0/go.mod h1:b4X26A8pekNb1ACJ58wAXgNKeUCGEAQ9dmACut9Sm/4=
 golang.org/x/crypto v0.31.0 h1:ihbySMvVjLAeSH1IbfcRTkD/iNscyz8rGzjF/E5hV6U=
 golang.org/x/crypto v0.31.0/go.mod h1:kDsLvtWBEx7MV9tJOj9bnXsPbxwJQ6csT/x4KIN4Ssk=
 golang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
