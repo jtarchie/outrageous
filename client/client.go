@@ -14,4 +14,4 @@ func (c *Client) ModelName() string {
 }
 
 // this is a local model that can do function calling
-var DefaultClient *Client = NewOllamaClient("llama3.1")
+var DefaultClient *Client = NewOllamaClient("llama3.2")

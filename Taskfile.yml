@@ -9,6 +9,7 @@ tasks:
       - golangci-lint run ./... --fix
   test:
     cmds:
+      - go test -race ./...
       - go run examples/basic/bare_minimum/main.go
       - go run examples/basic/agent_handoff/main.go
       - go run examples/basic/function_calling/main.go
