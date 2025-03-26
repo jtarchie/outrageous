@@ -47,21 +47,19 @@ func main() {
 	}
 }
 
+var (
+	model = fastembed.BGEBaseENV15
+	dim   = 768
+)
+
 func execute() error {
 	model, err := fastembed.NewFlagEmbedding(&fastembed.InitOptions{
-		Model:    fastembed.BGEBaseENV15,
+		Model:    model,
 		CacheDir: "../../.onnx_local_cache",
 	})
 	if err != nil {
 		return fmt.Errorf("failed to create embedding model: %w", err)
 	}
-
-	db, err := vector.NewSQLite(":memory:", 768)
-	// db, err := vector.NewChromem()
-	if err != nil {
-		return fmt.Errorf("failed to open sqlite database: %w", err)
-	}
-	defer db.Close()
 
 	file, err := os.Open("hamlet.txt")
 	if err != nil {
@@ -85,12 +83,19 @@ func execute() error {
 	slog.Info("embedding", "lines", len(lines))
 	chunks := lo.Chunk(
 		lo.Map(
-			Cons(lines, 1),
+			Cons(lines, 2),
 			func(element []string, _ int) string {
 				return strings.Join(element, " ")
 			},
 		),
 		maxChunkSize)
+
+	db, err := vector.NewSQLite(":memory:", dim, len(chunks)*maxChunkSize)
+	// db, err := vector.NewChromem()
+	if err != nil {
+		return fmt.Errorf("failed to open sqlite database: %w", err)
+	}
+	defer db.Close()
 
 	for chunkIndex, chunk := range chunks {
 		slog.Info("chunk", "index", chunkIndex, "size", len(chunk))
@@ -114,7 +119,7 @@ func execute() error {
 		}
 	}
 
-	query, err := model.Embed([]string{"that is the question"}, 0)
+	query, err := model.Embed([]string{"to be or not to be"}, 0)
 	if err != nil {
 		return fmt.Errorf("failed to embed query: %w", err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math"
+	"math/bits"
 	"math/rand/v2"
 	"sort"
 	"unsafe"
@@ -28,7 +29,7 @@ type SQLite struct {
 
 var _ VectorStore = (*SQLite)(nil)
 
-func NewSQLite(filename string, vectorDim int) (*SQLite, error) {
+func NewSQLite(filename string, vectorDim, n int) (*SQLite, error) {
 	db, err := sql.Open("sqlite3_vec", filename)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open sqlite database: %w", err)
@@ -66,7 +67,7 @@ func NewSQLite(filename string, vectorDim int) (*SQLite, error) {
 	}
 
 	if len(hyperplanes) == 0 {
-		numHyperplanes := int(min(64, 10*math.Log2(float64(vectorDim))))
+		numHyperplanes := min(64, int(math.Log2(float64(n))))
 
 		// Create a deterministic random source with fixed seed
 		src := rand.New(rand.NewPCG(1234, 5678)) // Using fixed seed values
@@ -164,7 +165,7 @@ func (h *Hash) Scan(value interface{}) error {
 func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 	hash := hashVector(query, s.hyperplanes)
 
-	slog.Debug("query", "hash", hash)
+	slog.Debug("query", "hash", hash, "hyperplanes", len(s.hyperplanes), "hyperplane_dim", len(s.hyperplanes[0]), "dim", len(query))
 
 	var results []Result
 	err := sqlscan.Select(
@@ -185,7 +186,7 @@ func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 				1=1
 			ORDER BY
 				distance ASC
-			LIMIT 100
+			LIMIT 1000
 		`,
 		sql.Named("hash", *(*int64)(unsafe.Pointer(&hash))), // Convert uint64 to int64
 	)
@@ -223,14 +224,7 @@ func (s *SQLite) Close() error {
 
 func hammingDistance(a, b int64) int {
 	xor := *(*uint64)(unsafe.Pointer(&a)) ^ *(*uint64)(unsafe.Pointer(&b)) // XOR finds differing bits
-	dist := 0
-
-	for xor > 0 {
-		dist += int(xor & 1) // Count 1s
-		xor >>= 1
-	}
-
-	return dist
+	return bits.OnesCount64(xor)                                           // Count the number of differing bits
 }
 
 func init() {
