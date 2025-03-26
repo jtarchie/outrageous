@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"os"
 
-	. "github.com/jtarchie/outrageous/agent"
+	. "github.com/jtarchie/outrageous/agent" //nolint: staticcheck
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
 )
@@ -39,5 +39,8 @@ func main() {
 
 	pp.Default.SetOmitEmpty(true)
 	pp.Default.SetExportedOnly(true)
-	pp.Print(response)
+	_, err = pp.Print(response)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

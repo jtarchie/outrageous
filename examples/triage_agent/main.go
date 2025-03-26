@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"os"
 
-	. "github.com/jtarchie/outrageous/agent"
+	. "github.com/jtarchie/outrageous/agent" //nolint: staticcheck
 	"github.com/k0kubun/pp/v3"
 	"github.com/lmittmann/tint"
 )
@@ -69,6 +70,9 @@ func main() {
 
 		pp.Default.SetOmitEmpty(true)
 		pp.Default.SetExportedOnly(true)
-		pp.Print(messages)
+		_, err = pp.Print(messages)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

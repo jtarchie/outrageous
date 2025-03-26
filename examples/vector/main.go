@@ -65,7 +65,7 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
 	}
-	defer file.Close()
+	defer file.Close() //nolint: errcheck
 
 	lines := []string{}
 	scanner := bufio.NewScanner(file)
@@ -95,7 +95,7 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite database: %w", err)
 	}
-	defer db.Close()
+	defer db.Close() //nolint: errcheck
 
 	for chunkIndex, chunk := range chunks {
 		slog.Info("chunk", "index", chunkIndex, "size", len(chunk))
