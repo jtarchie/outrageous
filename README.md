@@ -154,7 +154,7 @@ func main() {
     agent := New(
         "GPT-4 Agent",
         "You are an advanced assistant powered by GPT-4.",
-        WithClient(client.NewOpenAIClient(apiKey, "gpt4o")), // Override the default Ollama client
+        WithClient(client.NewOpenAIClient(apiKey, "gpt-4o")), // Override the default Ollama client
     )
     
     response, err := agent.Run(
