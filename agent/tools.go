@@ -28,14 +28,14 @@ func (f *Tools) Add(tools ...Tool) {
 
 func (f *Tools) Get(name string) (Tool, bool) {
 	for _, tool := range *f {
-		if tool.Name == name || toName(tool.Name) == toName(name) {
+		if tool.Name == name || toFormattedName(tool.Name) == toFormattedName(name) {
 			return tool, true
 		}
 	}
 	return Tool{}, false
 }
 
-func toName(name string) string {
+func toFormattedName(name string) string {
 	// name Must be alphameric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-), with a maximum length of 64
 	return regexp.MustCompile(`[^a-zA-Z0-9_.-]`).ReplaceAllString(name, "")
 }
@@ -46,7 +46,7 @@ func (f Tools) AsTools() []openai.Tool {
 		tools = append(tools, openai.Tool{
 			Type: openai.ToolTypeFunction,
 			Function: &openai.FunctionDefinition{
-				Name:        toName(tool.Name),
+				Name:        toFormattedName(tool.Name),
 				Description: tool.Description,
 				Parameters:  tool.Parameters,
 				Strict:      true,

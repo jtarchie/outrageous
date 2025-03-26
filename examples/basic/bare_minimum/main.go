@@ -20,7 +20,7 @@ func main() {
 
 func BasicExample() (*agent.Response, error) {
 	helpfulAgent := agent.New(
-		"Agent",
+		"Helpful Agent",
 		"You are a helpful agent.",
 	)
 

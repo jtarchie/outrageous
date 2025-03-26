@@ -19,11 +19,15 @@ type Agent struct {
 	client       *client.Client
 }
 
+func (agent *Agent) Name() string {
+	return agent.name
+}
+
 // AsTool creates a tool that returns the agent itself
 // This is useful for agent handoff scenarios where one agent can call another agent
 func (agent *Agent) AsTool(description string) Tool {
 	return Tool{
-		Name: toName(agent.name),
+		Name: toFormattedName(agent.name),
 		Description: fmt.Sprintf(strings.TrimSpace(`
 			You are a helpful agent that has the following instructions:
 
@@ -206,7 +210,7 @@ func WithClient(client *client.Client) AgentOption {
 
 func New(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
-		name:         toName(name),
+		name:         toFormattedName(name),
 		instructions: instructions,
 		client:       client.DefaultClient,
 	}
