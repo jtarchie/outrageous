@@ -188,7 +188,7 @@ These are examples of using different clients:
 - Gemini:
 
   ```go
-  client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "claude-3-5-sonnet-latest")
+  client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-2.0-flash")
   ```
 - Anthropic:
 
