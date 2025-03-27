@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"log/slog"
-	"os"
 	"strings"
 
-	. "github.com/jtarchie/outrageous/agent" //nolint: staticcheck
-	"github.com/k0kubun/pp/v3"
-	"github.com/lmittmann/tint"
+	"github.com/jtarchie/outrageous/agent"
+	"github.com/jtarchie/outrageous/examples"
 )
 
 type GetWeather struct {
@@ -25,42 +23,37 @@ func (g GetWeather) Call(ctx context.Context) (any, error) {
 }
 
 func main() {
-	var logLevel slog.Level
-	err := logLevel.UnmarshalText([]byte(os.Getenv("LOG_LEVEL")))
+	// examples.Run is only used to run examples
+	// it allows for testing of the examples
+	err := examples.Run(FunctionCalling)
 	if err != nil {
-		logLevel = slog.LevelDebug
+		log.Fatal(err)
 	}
-	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{
-		Level: logLevel,
-	})))
+}
 
-	agent := New(
+func FunctionCalling() (*agent.Response, error) {
+	helpfulAgent := agent.New(
 		"Agent",
 		"You are a helpful agent.",
 	)
 
-	fn, err := WrapStruct("returns the current weather", GetWeather{})
+	fn, err := agent.WrapStruct("returns the current weather", GetWeather{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	agent.Tools.Add(fn)
+	helpfulAgent.Tools.Add(fn)
 
-	response, err := agent.Run(
+	response, err := helpfulAgent.Run(
 		context.Background(),
-		Messages{
-			Message{Role: "user", Content: "What's the weather in NYC?"},
+		agent.Messages{
+			agent.Message{Role: "user", Content: "What's the weather in NYC?"},
 		},
 	)
 
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("failed to run: %w", err)
 	}
 
-	pp.Default.SetOmitEmpty(true)
-	pp.Default.SetExportedOnly(true)
-	_, err = pp.Print(response)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return response, nil
 }
