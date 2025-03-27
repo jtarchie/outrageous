@@ -29,7 +29,7 @@ func AgentHandoff() (*agent.Response, error) {
 		"You only speak Spanish",
 	)
 
-	englishAgent.Tools.Add(spanishAgent.AsTool("Transfer spanish speaking users immediately"))
+	englishAgent.Handoffs.Add(spanishAgent.AsTool("Transfer spanish speaking users immediately"))
 
 	response, err := englishAgent.Run(
 		context.Background(),

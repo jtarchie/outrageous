@@ -50,15 +50,15 @@ func TriageAgentDemo() (*agent.Response, error) {
 		"Help the user with a refund. If the reason is that it was too expensive, offer the user a refund code. If they insist, then process the refund.",
 	)
 
-	triageAgent.Tools.Add(
+	triageHandoff := triageAgent.AsTool("Call this function if a user is asking about a topic that is not handled by the current agent.")
+	triageAgent.Handoffs.Add(
 		salesAgent.AsTool("Transfer the conversation to the sales agent."),
 		refundsAgent.AsTool("Transfer the conversation to the refunds agent."),
 	)
-	salesAgent.Tools.Add(
-		triageAgent.AsTool("Call this function if a user is asking about a topic that is not handled by the current agent."),
-	)
+
+	salesAgent.Handoffs.Add(triageHandoff)
+	refundsAgent.Handoffs.Add(triageHandoff)
 	refundsAgent.Tools.Add(
-		triageAgent.AsTool("Call this function if a user is asking about a topic that is not handled by the current agent."),
 		agent.MustWrapStruct("Refund an item. Refund an item. Make sure you have the item_id of the form item_... Ask for user confirmation before processing the refund", ProcessRefund{}),
 		agent.MustWrapStruct("Apply a discount to the user's cart", ApplyDiscount{}),
 	)

@@ -18,7 +18,8 @@ type Agent struct {
 	logger       *slog.Logger
 	name         string
 
-	Tools Tools
+	Tools    Tools
+	Handoffs Tools
 }
 
 func (agent *Agent) Name() string {
@@ -83,6 +84,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		"max_messages", maxMessages,
 		"initial_messages_count", len(messages),
 		"tools_count", len(activeAgent.Tools),
+		"handoffs_count", len(activeAgent.Handoffs),
 	)
 
 	for range maxMessages {
@@ -93,16 +95,18 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			break
 		}
 
+		completeTools := append(activeAgent.Tools.AsTools(), activeAgent.Handoffs.AsTools()...)
 		completion := openai.ChatCompletionRequest{
 			Model:    activeAgent.client.ModelName(),
 			Messages: messages,
-			Tools:    activeAgent.Tools.AsTools(),
+			Tools:    completeTools,
 		}
 
 		logger.Debug("agent.requesting",
 			"agent_name", activeAgent.name,
 			"model", activeAgent.client.ModelName(),
 			"tools_count", len(activeAgent.Tools),
+			"handoffs_count", len(activeAgent.Handoffs),
 		)
 
 		response, err := activeAgent.client.CreateChatCompletion(
@@ -162,20 +166,10 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					return nil, fmt.Errorf("could not call function: %w", err)
 				}
 
-				if nextAgent, ok := value.(*Agent); ok {
-					logger.Debug("agent.handoff",
-						"from_agent", activeAgent.name,
-						"to_agent", nextAgent.name,
-						"tool_name", functionName)
-					if !nextAgent.IsZero() {
-						activeAgent = nextAgent
-					}
-				} else {
-					logger.Debug("agent.function_result",
-						"agent_name", activeAgent.name,
-						"tool_name", functionName,
-						"result_type", fmt.Sprintf("%T", value))
-				}
+				logger.Debug("agent.function_result",
+					"agent_name", activeAgent.name,
+					"tool_name", functionName,
+					"result_type", fmt.Sprintf("%T", value))
 
 				messages = append(messages, Message{
 					Role:       "tool",
@@ -184,6 +178,45 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					Content:    fmt.Sprintf("%s", value),
 				})
 
+				break
+			} else if agent, found := activeAgent.Handoffs.Get(functionName); found {
+				params := map[string]any{}
+
+				err := json.Unmarshal([]byte(toolCall.Function.Arguments), &params)
+				if err != nil {
+					return nil, fmt.Errorf("could not unmarshal function arguments: %w", err)
+				}
+
+				logger.Debug("agent.handoff_agent",
+					"agent_name", activeAgent.name,
+					"tool_name", functionName)
+
+				value, err := agent.Func(ctx, params)
+				if err != nil {
+					return nil, fmt.Errorf("could not call function: %w", err)
+				}
+
+				if nextAgent, ok := value.(*Agent); ok {
+					logger.Debug("agent.handoff",
+						"from_agent", activeAgent.name,
+						"to_agent", nextAgent.name,
+						"tool_name", functionName)
+					if !nextAgent.IsZero() {
+						activeAgent = nextAgent
+					}
+				}
+
+				logger.Debug("agent.handoff_result",
+					"agent_name", activeAgent.name,
+					"tool_name", functionName,
+					"result_type", fmt.Sprintf("%T", value))
+
+				messages = append(messages, Message{
+					Role:       "tool",
+					ToolCallID: toolCall.ID,
+					Name:       functionName,
+					Content:    fmt.Sprintf("%s", value),
+				})
 				break
 			} else {
 				logger.Debug("agent.missing_function",
