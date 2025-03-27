@@ -20,8 +20,8 @@ const (
 var prompt string
 
 type Result struct {
-	Status      Status `json:"status" description:"The status of the assertion. Either success or failure" required:"true"`
 	Explanation string `json:"explanation" description:"The explanation of the assertion. This is a human readable explanation of the assertion. It should be a single sentence." required:"true"`
+	Status      Status `json:"status" description:"The status of the assertion. Either success or failure" required:"true"`
 }
 
 func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
@@ -35,6 +35,10 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("could not generate schema: %w", err)
 	}
+
+	prop := schema.Properties["status"]
+	prop.Enum = []string{"success", "failure"}
+	schema.Properties["status"] = prop
 
 	var result Result
 	assertionAgent.Tools.Add(agent.Tool{
@@ -56,7 +60,7 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 				return nil, fmt.Errorf("could not parse explanation: %v", params["explanation"])
 			}
 
-			return nil, nil
+			return result.Status, nil
 		},
 	})
 

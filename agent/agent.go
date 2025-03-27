@@ -79,6 +79,16 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 	maxMessages := 10
 	activeAgent := agent
 
+	messages = append(
+		Messages{
+			Message{
+				Role:    "system",
+				Content: activeAgent.instructions,
+			},
+		},
+		messages...,
+	)
+
 	logger.Debug("agent.starting",
 		"agent_name", activeAgent.name,
 		"max_messages", maxMessages,
@@ -97,9 +107,10 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 		completeTools := append(activeAgent.Tools.AsTools(), activeAgent.Handoffs.AsTools()...)
 		completion := openai.ChatCompletionRequest{
-			Model:    activeAgent.client.ModelName(),
-			Messages: messages,
-			Tools:    completeTools,
+			Model:      activeAgent.client.ModelName(),
+			Messages:   messages,
+			Tools:      completeTools,
+			ToolChoice: "auto",
 		}
 
 		logger.Debug("agent.requesting",
