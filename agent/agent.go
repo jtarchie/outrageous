@@ -13,10 +13,12 @@ import (
 )
 
 type Agent struct {
-	name         string
-	instructions string
-	Tools        Tools
 	client       *client.Client
+	instructions string
+	logger       *slog.Logger
+	name         string
+
+	Tools Tools
 }
 
 func (agent *Agent) Name() string {
@@ -71,10 +73,12 @@ type Response struct {
 // It will continue to run until the agent has no more messages to process
 // or the maximum number of messages is reached.
 func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, error) {
+	logger := agent.logger
+
 	maxMessages := 10
 	activeAgent := agent
 
-	slog.Debug("agent.starting",
+	logger.Debug("agent.starting",
 		"agent_name", activeAgent.name,
 		"max_messages", maxMessages,
 		"initial_messages_count", len(messages),
@@ -83,7 +87,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 	for range maxMessages {
 		if activeAgent.IsZero() {
-			slog.Debug("agent.stopping",
+			logger.Debug("agent.stopping",
 				"reason", "agent_is_zero",
 				"agent_name", activeAgent.name)
 			break
@@ -95,7 +99,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			Tools:    activeAgent.Tools.AsTools(),
 		}
 
-		slog.Debug("agent.requesting",
+		logger.Debug("agent.requesting",
 			"agent_name", activeAgent.name,
 			"model", activeAgent.client.ModelName(),
 			"tools_count", len(activeAgent.Tools),
@@ -121,13 +125,13 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		}
 		messages = append(messages, message)
 
-		slog.Debug("agent.received",
+		logger.Debug("agent.received",
 			"agent_name", activeAgent.name,
 			"has_content", message.Content != "",
 			"tool_calls_count", len(message.ToolCalls))
 
 		if len(message.ToolCalls) == 0 {
-			slog.Debug("agent.completed",
+			logger.Debug("agent.completed",
 				"agent_name", activeAgent.name,
 				"reason", "no_tool_calls")
 			break
@@ -136,7 +140,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		for _, toolCall := range message.ToolCalls {
 			functionName := toolCall.Function.Name
 
-			slog.Debug("agent.tool_call",
+			logger.Debug("agent.tool_call",
 				"agent_name", activeAgent.name,
 				"tool_name", functionName,
 				"tool_call_id", toolCall.ID)
@@ -149,7 +153,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					return nil, fmt.Errorf("could not unmarshal function arguments: %w", err)
 				}
 
-				slog.Debug("agent.executing_function",
+				logger.Debug("agent.executing_function",
 					"agent_name", activeAgent.name,
 					"tool_name", functionName)
 
@@ -159,7 +163,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 				}
 
 				if nextAgent, ok := value.(*Agent); ok {
-					slog.Debug("agent.handoff",
+					logger.Debug("agent.handoff",
 						"from_agent", activeAgent.name,
 						"to_agent", nextAgent.name,
 						"tool_name", functionName)
@@ -167,7 +171,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 						activeAgent = nextAgent
 					}
 				} else {
-					slog.Debug("agent.function_result",
+					logger.Debug("agent.function_result",
 						"agent_name", activeAgent.name,
 						"tool_name", functionName,
 						"result_type", fmt.Sprintf("%T", value))
@@ -182,7 +186,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 				break
 			} else {
-				slog.Debug("agent.missing_function",
+				logger.Debug("agent.missing_function",
 					"agent_name", activeAgent.name,
 					"tool_name", functionName)
 				return nil, fmt.Errorf("tool not found: %s", toolCall.Function.Name)
@@ -190,7 +194,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		}
 	}
 
-	slog.Debug("agent.run_completed",
+	logger.Debug("agent.run_completed",
 		"agent_name", activeAgent.name,
 		"final_messages_count", len(messages))
 
@@ -208,11 +212,18 @@ func WithClient(client *client.Client) AgentOption {
 	}
 }
 
+func WithLogger(logger *slog.Logger) AgentOption {
+	return func(agent *Agent) {
+		agent.logger = logger.WithGroup("agent")
+	}
+}
+
 func New(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
 		name:         toFormattedName(name),
 		instructions: instructions,
 		client:       client.DefaultClient,
+		logger:       slog.Default().WithGroup("agent"),
 	}
 
 	for _, option := range options {
