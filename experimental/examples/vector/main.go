@@ -48,8 +48,8 @@ func main() {
 }
 
 var (
-	model = fastembed.BGEBaseENV15
-	dim   = 768
+	model = fastembed.BGESmallENV15
+	// dim   = 384
 )
 
 func execute() error {
@@ -90,15 +90,15 @@ func execute() error {
 		),
 		maxChunkSize)
 
-	db, err := vector.NewSQLite(":memory:", dim, len(chunks)*maxChunkSize)
-	// db, err := vector.NewChromem()
+	// db, err := vector.NewSQLite(":memory:", dim, len(chunks)*maxChunkSize)
+	db, err := vector.NewChromem()
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite database: %w", err)
 	}
 	defer db.Close() //nolint: errcheck
 
 	for chunkIndex, chunk := range chunks {
-		slog.Info("chunk", "index", chunkIndex, "size", len(chunk))
+		slog.Info("chunk", "index", chunkIndex, "size", len(chunk), "total", len(chunks))
 
 		embeddings, err := model.Embed(chunk, len(chunk))
 		if err != nil {
@@ -126,7 +126,7 @@ func execute() error {
 
 	slog.Info("query", "embedding", len(query))
 
-	results, err := db.Query(context.Background(), query[0])
+	results, err := db.Query(context.Background(), query[0], 10)
 	if err != nil {
 		return fmt.Errorf("failed to query database: %w", err)
 	}

@@ -162,7 +162,7 @@ func (h *Hash) Scan(value interface{}) error {
 	return nil
 }
 
-func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
+func (s *SQLite) Query(ctx context.Context, query Vector, numResults int) ([]Result, error) {
 	hash := hashVector(query, s.hyperplanes)
 
 	slog.Debug("query", "hash", hash, "hyperplanes", len(s.hyperplanes), "hyperplane_dim", len(s.hyperplanes[0]), "dim", len(query))
@@ -186,9 +186,10 @@ func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 				1=1
 			ORDER BY
 				distance ASC
-			LIMIT 1000
+			LIMIT :limit
 		`,
 		sql.Named("hash", *(*int64)(unsafe.Pointer(&hash))), // Convert uint64 to int64
+		sql.Named("limit", numResults*10),
 	)
 	if err != nil {
 		slog.Error("query.exec", "error", err)
@@ -206,8 +207,8 @@ func (s *SQLite) Query(ctx context.Context, query Vector) ([]Result, error) {
 		return results[i].Similarity > results[j].Similarity
 	})
 
-	if len(results) > 10 {
-		results = results[:10]
+	if len(results) > numResults {
+		results = results[:numResults]
 	}
 
 	return results, nil

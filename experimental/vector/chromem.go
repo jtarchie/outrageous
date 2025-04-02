@@ -44,8 +44,8 @@ func (c *Chromem) Insert(ctx context.Context, id string, vector Vector, content 
 	return nil
 }
 
-func (c *Chromem) Query(ctx context.Context, query Vector) ([]Result, error) {
-	results, err := c.collection.QueryEmbedding(ctx, query, 10, nil, nil)
+func (c *Chromem) Query(ctx context.Context, query Vector, numResults int) ([]Result, error) {
+	results, err := c.collection.QueryEmbedding(ctx, query, numResults, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query collection: %w", err)
 	}
