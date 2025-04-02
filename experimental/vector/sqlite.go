@@ -168,24 +168,34 @@ func (s *SQLite) Query(ctx context.Context, query Vector, numResults int) ([]Res
 	slog.Debug("query", "hash", hash, "hyperplanes", len(s.hyperplanes), "hyperplane_dim", len(s.hyperplanes[0]), "dim", len(query))
 
 	var results []Result
+	// First get all distinct hashes once with their distances, then join to actual records
 	err := sqlscan.Select(
 		ctx,
 		s.db,
 		&results,
 		`
+			WITH hash_distances AS (
+				SELECT DISTINCT
+					hash,
+					hamming(:hash, hash) as distance
+				FROM 
+					embeddings
+				ORDER BY 
+					distance ASC
+			)
 			SELECT
-				id,
-				json(vector) as vector,
-				content,
-				json(metadata) as metadata,
-				created_at,
-				hamming(:hash, hash) as distance
+				e.id,
+				json(e.vector) as vector,
+				e.content,
+				json(e.metadata) as metadata,
+				e.created_at,
+				h.distance
 			FROM
-				embeddings
-			WHERE
-				1=1
+				hash_distances h
+			JOIN
+				embeddings e ON h.hash = e.hash
 			ORDER BY
-				distance ASC
+				h.distance ASC, e.id
 			LIMIT :limit
 		`,
 		sql.Named("hash", *(*int64)(unsafe.Pointer(&hash))), // Convert uint64 to int64

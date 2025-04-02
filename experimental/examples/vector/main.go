@@ -49,7 +49,7 @@ func main() {
 
 var (
 	model = fastembed.BGESmallENV15
-	// dim   = 384
+	dim   = 384
 )
 
 func execute() error {
@@ -90,8 +90,8 @@ func execute() error {
 		),
 		maxChunkSize)
 
-	// db, err := vector.NewSQLite(":memory:", dim, len(chunks)*maxChunkSize)
-	db, err := vector.NewChromem()
+	db, err := vector.NewSQLite(":memory:", dim, len(chunks)*maxChunkSize)
+	// db, err := vector.NewChromem()
 	if err != nil {
 		return fmt.Errorf("failed to open sqlite database: %w", err)
 	}
