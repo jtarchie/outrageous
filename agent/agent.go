@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jtarchie/outrageous/client"
+	"github.com/samber/lo"
 	"github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
@@ -32,19 +33,24 @@ func (agent *Agent) AsTool(description string) Tool {
 	return Tool{
 		Name: toFormattedName(agent.name),
 		Description: fmt.Sprintf(strings.TrimSpace(`
-			You are a helpful agent that has the following instructions:
-
+			Agent Handoff Tool: Use this to transfer the conversation to the %s agent.
+			
+			This agent has the following instructions:
 			%s
-		`), description),
+			
+			IMPORTANT: When calling this tool, you must provide detailed context about the 
+			current conversation state and why you're handing off to this agent. The receiving 
+			agent will use this context to continue the conversation seamlessly.
+		`), agent.name, description),
 		Parameters: &jsonschema.Definition{
 			Type: jsonschema.Object,
 			Properties: map[string]jsonschema.Definition{
-				"instruction": {
+				"agent_context": {
 					Type:        jsonschema.String,
-					Description: "Instruction for the agent from the previous agent",
+					Description: "Required detailed context about the current conversation state, including what has been discussed, any relevant information gathered, and why you're handing off to this agent. This will help the receiving agent continue the conversation effectively.",
 				},
 			},
-			Required: []string{},
+			Required: []string{"agent_context"},
 		},
 		Func: func(ctx context.Context, params map[string]any) (any, error) {
 			return agent, nil
@@ -89,12 +95,16 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		messages...,
 	)
 
+	activeMessages := make(Messages, len(messages))
+	_ = copy(activeMessages, messages)
+
 	logger.Debug("agent.starting",
 		"agent_name", activeAgent.name,
 		"max_messages", maxMessages,
 		"initial_messages_count", len(messages),
 		"tools_count", len(activeAgent.Tools),
 		"handoffs_count", len(activeAgent.Handoffs),
+		"active_messages_count", len(activeMessages),
 	)
 
 	for range maxMessages {
@@ -108,7 +118,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		completeTools := append(activeAgent.Tools.AsTools(), activeAgent.Handoffs.AsTools()...)
 		completion := openai.ChatCompletionRequest{
 			Model:      activeAgent.client.ModelName(),
-			Messages:   messages,
+			Messages:   activeMessages,
 			Tools:      completeTools,
 			ToolChoice: "auto",
 		}
@@ -118,6 +128,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			"model", activeAgent.client.ModelName(),
 			"tools_count", len(activeAgent.Tools),
 			"handoffs_count", len(activeAgent.Handoffs),
+			"messages_count", len(activeMessages),
 		)
 
 		response, err := activeAgent.client.CreateChatCompletion(
@@ -139,6 +150,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 			}
 		}
 		messages = append(messages, message)
+		activeMessages = append(activeMessages, message)
 
 		logger.Debug("agent.received",
 			"agent_name", activeAgent.name,
@@ -182,12 +194,14 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					"tool_name", functionName,
 					"result_type", fmt.Sprintf("%T", value))
 
-				messages = append(messages, Message{
+				message := Message{
 					Role:       "tool",
 					ToolCallID: toolCall.ID,
 					Name:       functionName,
 					Content:    fmt.Sprintf("%s", value),
-				})
+				}
+				messages = append(messages, message)
+				activeMessages = append(activeMessages, message)
 
 				break
 			} else if agent, found := activeAgent.Handoffs.Get(functionName); found {
@@ -207,27 +221,52 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 					return nil, fmt.Errorf("could not call function: %w", err)
 				}
 
+				logger.Debug("agent.handoff_result",
+					"agent_name", activeAgent.name,
+					"tool_name", functionName,
+					"result_type", fmt.Sprintf("%T", value))
+
+				message := Message{
+					Role:       "tool",
+					ToolCallID: toolCall.ID,
+					Name:       functionName,
+					Content:    fmt.Sprintf("%s", value),
+				}
+				messages = append(messages, message)
+				activeMessages = append(activeMessages, message)
+
 				if nextAgent, ok := value.(*Agent); ok {
 					logger.Debug("agent.handoff",
 						"from_agent", activeAgent.name,
 						"to_agent", nextAgent.name,
 						"tool_name", functionName)
 					if !nextAgent.IsZero() {
+						lastUserMessage, _ := lo.Find(messages, func(m Message) bool {
+							return m.Role == "user"
+						})
+						agentContext := params["agent_context"]
+
+						logger.Debug("agent.handoff_context",
+							"from_agent", activeAgent.name,
+							"to_agent", nextAgent.name,
+							"last_user_message", lastUserMessage.Content,
+							"agent_context", agentContext,
+						)
+
+						activeMessages = Messages{
+							Message{
+								Role: "system",
+								Content: fmt.Sprintf(strings.TrimSpace(`%s
+									This is a conversation starting from another agent. The conversation have been passed to you.
+									The previous agent has provide context for you to follow: %s
+								`), nextAgent.instructions, agentContext),
+							},
+							lastUserMessage,
+						}
 						activeAgent = nextAgent
 					}
 				}
 
-				logger.Debug("agent.handoff_result",
-					"agent_name", activeAgent.name,
-					"tool_name", functionName,
-					"result_type", fmt.Sprintf("%T", value))
-
-				messages = append(messages, Message{
-					Role:       "tool",
-					ToolCallID: toolCall.ID,
-					Name:       functionName,
-					Content:    fmt.Sprintf("%s", value),
-				})
 				break
 			} else {
 				logger.Debug("agent.missing_function",
