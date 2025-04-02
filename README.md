@@ -33,6 +33,7 @@ package main
 import (
     "context"
     "log"
+    "fmt"
     . "github.com/jtarchie/outrageous/agent"
 )
 
@@ -138,6 +139,8 @@ import (
     "context"
     "log"
     "os"
+    "fmt"
+
     . "github.com/jtarchie/outrageous/agent"
     "github.com/jtarchie/outrageous/client"
 )
@@ -181,12 +184,10 @@ import (
     "github.com/jtarchie/outrageous/client"
 )
 
-func main() {
-    openAIClient := client.NewGeminiClient(os.Getenv("OPENAI_API_KEY"), "gpt-4o")
-    ollamaClient := client.NewOllamaClient("llama3.2") // this is our default client
-    geminiClient := client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-2.0-flash")
-    claudeClient :=  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest")
-}
+var openAIClient = client.NewGeminiClient(os.Getenv("OPENAI_API_KEY"), "gpt-4o")
+var ollamaClient = client.NewOllamaClient("llama3.2") // this is our default client
+var geminiClient = client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-2.0-flash")
+var claudeClient =  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest")
 ```
 
 ## Testing
