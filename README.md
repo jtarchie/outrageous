@@ -190,6 +190,27 @@ var geminiClient = client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini
 var claudeClient =  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest")
 ```
 
+### Using Agent Lifecycle Hooks
+
+Please see [example](examples/basic/hooks/main.go) for more information.
+
+The current support hooks:
+
+- `OnAgentStart`: Triggered when an agent begins execution, before any model
+  calls are made. This occurs at the start of the `Run` method and after an
+  agent handoff has been prepared.
+- `OnToolStart`: Called immediately before a tool or handoff function is
+  executed, after the parameters have been parsed from the LLM's function call.
+- `OnToolEnd`: Invoked after a tool or handoff function completes successfully,
+  providing access to the tool's return value before it's formatted as a
+  message.
+- `OnHandoff`: Called during an agent handoff process, after the current agent
+  has finished but before the new agent fully starts processing. This happens
+  after the preparation of context for the handoff.
+- `OnAgentEnd`: Triggered when an agent completes its execution or when an agent
+  is about to hand off to another agent. This happens at the end of the `Run`
+  method or during the handoff preparation.
+
 ## Testing
 
 All [examples](examples/) are tested against [Ollama](https://ollama.com) and

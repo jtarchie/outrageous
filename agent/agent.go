@@ -18,6 +18,7 @@ type Agent struct {
 	instructions string
 	logger       *slog.Logger
 	name         string
+	hooks        AgentHooks
 
 	Tools    Tools
 	Handoffs Tools
@@ -107,6 +108,13 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		"active_messages_count", len(activeMessages),
 	)
 
+	// Call OnAgentStart hook if it exists
+	if activeAgent.hooks != nil {
+		if err := activeAgent.hooks.OnAgentStart(ctx, activeAgent, activeMessages); err != nil {
+			return nil, fmt.Errorf("agent hook OnAgentStart failed: %w", err)
+		}
+	}
+
 	for range maxMessages {
 		// Exit if we have no active agent
 		if activeAgent.IsZero() {
@@ -151,10 +159,19 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		"agent_name", activeAgent.name,
 		"final_messages_count", len(messages))
 
-	return &Response{
+	response := &Response{
 		Messages: messages,
 		Agent:    activeAgent,
-	}, nil
+	}
+
+	// Call OnAgentEnd hook if it exists
+	if activeAgent.hooks != nil {
+		if err := activeAgent.hooks.OnAgentEnd(ctx, activeAgent, response); err != nil {
+			return nil, fmt.Errorf("agent hook OnAgentEnd failed: %w", err)
+		}
+	}
+
+	return response, nil
 }
 
 // processToolCall handles both regular tools and handoff tools with unified logic
@@ -169,6 +186,13 @@ func (agent *Agent) processToolCall(ctx context.Context, toolCall openai.ToolCal
 	params := map[string]any{}
 	if err := json.Unmarshal([]byte(toolCall.Function.Arguments), &params); err != nil {
 		return Message{}, nil, fmt.Errorf("could not unmarshal function arguments: %w", err)
+	}
+
+	// Call OnToolStart hook if it exists
+	if agent.hooks != nil {
+		if err := agent.hooks.OnToolStart(ctx, agent, functionName, params); err != nil {
+			return Message{}, nil, fmt.Errorf("agent hook OnToolStart failed: %w", err)
+		}
 	}
 
 	var value any
@@ -206,6 +230,13 @@ func (agent *Agent) processToolCall(ctx context.Context, toolCall openai.ToolCal
 
 	if err != nil {
 		return Message{}, nil, fmt.Errorf("could not call function: %w", err)
+	}
+
+	// Call OnToolEnd hook if it exists
+	if agent.hooks != nil {
+		if err := agent.hooks.OnToolEnd(ctx, agent, functionName, value); err != nil {
+			return Message{}, nil, fmt.Errorf("agent hook OnToolEnd failed: %w", err)
+		}
 	}
 
 	agent.logger.Debug(fmt.Sprintf("agent.%s", resultType),
@@ -270,7 +301,7 @@ func (agent *Agent) prepareHandoff(nextAgent *Agent, messages Messages, argJSON 
 	// Parse the arguments to get the agent context
 	params := map[string]any{}
 	_ = json.Unmarshal([]byte(argJSON), &params)
-	agentContext := params["agent_context"]
+	agentContext, _ := params["agent_context"].(string)
 
 	// Find the last user message
 	lastUserMessage, _ := lo.Find(messages, func(m Message) bool {
@@ -284,6 +315,19 @@ func (agent *Agent) prepareHandoff(nextAgent *Agent, messages Messages, argJSON 
 		"agent_context", agentContext,
 	)
 
+	// Create temporary response for the current agent
+	currentAgentResponse := &Response{
+		Messages: messages,
+		Agent:    agent,
+	}
+
+	// Call OnAgentEnd hook for the current agent
+	if agent.hooks != nil {
+		if err := agent.hooks.OnAgentEnd(context.Background(), agent, currentAgentResponse); err != nil {
+			agent.logger.Error("agent.handoff_end_hook_failed", "error", err)
+		}
+	}
+
 	// Create new messages for the next agent
 	activeMessages := Messages{
 		Message{
@@ -294,6 +338,20 @@ func (agent *Agent) prepareHandoff(nextAgent *Agent, messages Messages, argJSON 
             `), nextAgent.instructions, agentContext),
 		},
 		lastUserMessage,
+	}
+
+	// Call OnHandoff hook if it exists
+	if agent.hooks != nil {
+		if err := agent.hooks.OnHandoff(context.Background(), agent, nextAgent, agentContext); err != nil {
+			agent.logger.Error("agent.handoff_hook_failed", "error", err)
+		}
+	}
+
+	// Call OnAgentStart hook for the next agent
+	if nextAgent.hooks != nil {
+		if err := nextAgent.hooks.OnAgentStart(context.Background(), nextAgent, activeMessages); err != nil {
+			agent.logger.Error("agent.handoff_start_hook_failed", "error", err)
+		}
 	}
 
 	return nextAgent, activeMessages
@@ -313,12 +371,20 @@ func WithLogger(logger *slog.Logger) AgentOption {
 	}
 }
 
+// WithHooks adds lifecycle hooks to the agent
+func WithHooks(hooks AgentHooks) AgentOption {
+	return func(agent *Agent) {
+		agent.hooks = hooks
+	}
+}
+
 func New(name, instructions string, options ...AgentOption) *Agent {
 	agent := &Agent{
 		name:         toFormattedName(name),
 		instructions: instructions,
 		client:       client.DefaultClient,
 		logger:       slog.Default().WithGroup("agent"),
+		hooks:        &DefaultAgentHooks{}, // Default no-op hooks
 	}
 
 	for _, option := range options {
