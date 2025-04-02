@@ -8,7 +8,7 @@ require (
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/k0kubun/pp/v3 v3.4.1
 	github.com/lmittmann/tint v1.0.7
-	github.com/mattn/go-sqlite3 v1.14.26
+	github.com/mattn/go-sqlite3 v1.14.27
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
 	github.com/samber/lo v1.49.1
@@ -37,6 +37,5 @@ require (
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/term v0.30.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
