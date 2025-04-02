@@ -173,28 +173,21 @@ func main() {
 
 These are examples of using different clients:
 
-- OpenAI:
+```go
+package main
 
-  ```go
-  client.NewGeminiClient(os.Getenv("OPENAI_API_KEY"), "gpt-4o")
-  ```
+import (
+    "os"
+    "github.com/jtarchie/outrageous/client"
+)
 
-- Ollama:
-
-  ```go
-  client.NewOllamaClient("llama3.2") // this is our default client
-  ```
-
-- Gemini:
-
-  ```go
-  client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-2.0-flash")
-  ```
-- Anthropic:
-
-  ```go
-  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest"),
-  ```
+func main() {
+    openAIClient := client.NewGeminiClient(os.Getenv("OPENAI_API_KEY"), "gpt-4o")
+    ollamaClient := client.NewOllamaClient("llama3.2") // this is our default client
+    geminiClient := client.NewGeminiClient(os.Getenv("GEMINI_API_TOKEN"), "gemini-2.0-flash")
+    claudeClient :=  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), "claude-3-5-sonnet-latest")
+}
+```
 
 ## Testing
 
