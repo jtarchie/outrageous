@@ -16,7 +16,7 @@ import (
 
 func TestRead(t *testing.T) {
 	a := gomega.NewGomegaWithT(t)
-	
+
 	contents, err := os.ReadFile("README.md")
 	a.Expect(err).NotTo(gomega.HaveOccurred())
 
@@ -43,4 +43,4 @@ func TestRead(t *testing.T) {
 		_, err = conf.Check("main", fset, []*ast.File{node}, info)
 		a.Expect(err).NotTo(gomega.HaveOccurred(), fmt.Sprintf("Code block %d failed type checking: %s", index, code))
 	}
-}	
+}

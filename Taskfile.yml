@@ -10,4 +10,6 @@ tasks:
   test:
     cmds:
       - go test -race ./...
-      - go run examples/basic/scrape_webpage/main.go
+      # commenting out so we don't rely on public website
+      # test does not run because of issue with localhost and chromedp
+      # - go run examples/basic/scrape_webpage/main.go

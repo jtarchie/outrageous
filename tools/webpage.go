@@ -19,7 +19,6 @@ type WebPageResponse struct {
 	Body        string `json:"body"`
 }
 
-// this uses a full headless web browser to scrape the page
 func (w WebPage) Call(ctx context.Context) (any, error) {
 	ctx, cancel := chromedp.NewContext(ctx)
 	defer cancel()
