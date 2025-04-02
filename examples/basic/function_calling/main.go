@@ -33,7 +33,7 @@ func main() {
 
 func FunctionCalling() (*agent.Response, error) {
 	helpfulAgent := agent.New(
-		"Agent",
+		"FunctionAgent",
 		"You are a helpful agent.",
 	)
 

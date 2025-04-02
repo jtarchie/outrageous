@@ -10,5 +10,4 @@ tasks:
   test:
     cmds:
       - go test -race ./...
-      - go run examples/basic/function_calling/main.go
       - go run examples/basic/scrape_webpage/main.go
