@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
-	"encoding/base64"
 	"fmt"
-	"image/jpeg"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -64,7 +61,7 @@ func (c *CLI) Run() error {
 	for index, frame := range frames {
 		slog.Debug("analyze.frame", "frame", frame, "index", index)
 
-		encodedFrame, err := base64EncodeJpeg(frame)
+		encodedFrame, err := agent.Base64EncodeImage(frame)
 		if err != nil {
 			return fmt.Errorf("failed to encode frame: %w", err)
 		}
@@ -76,7 +73,7 @@ func (c *CLI) Run() error {
 					openai.ChatMessagePart{
 						Type: "image_url",
 						ImageURL: &openai.ChatMessageImageURL{
-							URL: "data:image/jpeg;base64," + encodedFrame,
+							URL: encodedFrame,
 						},
 					},
 				},
@@ -90,29 +87,6 @@ func (c *CLI) Run() error {
 	}
 
 	return nil
-}
-
-func base64EncodeJpeg(filePath string) (string, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open file: %w", err)
-	}
-	defer func() { _ = file.Close() }()
-
-	image, err := jpeg.Decode(file)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode image: %w", err)
-	}
-
-	buffer := &bytes.Buffer{}
-	err = jpeg.Encode(buffer, image, &jpeg.Options{Quality: 100})
-	if err != nil {
-		return "", fmt.Errorf("failed to encode image: %w", err)
-	}
-
-	encodedImage := base64.StdEncoding.EncodeToString(buffer.Bytes())
-
-	return encodedImage, nil
 }
 
 func main() {
