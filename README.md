@@ -25,7 +25,12 @@ go get github.com/jtarchie/outrageous
 
 ## Examples
 
+Please see the [examples](examples/) directory for more.
+
 ### Building an Agent
+
+An Agent is responsible for performing certain tasks over a series a messages.
+Agent's can handoff to other agents and get information from tools.
 
 ```go
 package main
@@ -63,6 +68,9 @@ func main() {
 ```
 
 ### Creating a custom tool
+
+A tool allows an agent to get information that it can discern. This example
+turns the agent into the world's most expensive calculator.
 
 ```go
 package main
@@ -192,7 +200,7 @@ var claudeClient =  client.NewAnthropicClient(os.Getenv("ANTHROPIC_API_TOKEN"), 
 
 ### Using Agent Lifecycle Hooks
 
-Please see [example](examples/basic/hooks/main.go) for more information.
+Please see this [example](examples/basic/hooks/main.go) for more information.
 
 The current support hooks:
 
