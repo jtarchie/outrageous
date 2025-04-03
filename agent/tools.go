@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"reflect"
@@ -89,44 +90,27 @@ func WrapStruct(description string, s Caller) (Tool, error) {
 			// Create a new instance of the struct
 			instance := reflect.New(reflect.TypeOf(s)).Interface()
 
-			// Populate the struct with the parameters
-			for key, value := range params {
-				field := reflect.ValueOf(instance).Elem().FieldByName(key)
-				slog.Debug("tool.call", "name", structName, "key", key, "value", value, "field", field)
-				if !field.IsValid() {
-					// find field by json tag
-					for i := 0; i < reflect.TypeOf(s).NumField(); i++ {
-						fieldType := reflect.TypeOf(s).Field(i)
-						jsonTag := fieldType.Tag.Get("json")
-						slog.Debug("tool.call", "name", structName, "jsonTag", jsonTag, "key", key)
-						if jsonTag == key {
-							field = reflect.ValueOf(instance).Elem().Field(i)
-							break
-						}
-					}
-				}
+			contents, err := json.Marshal(params)
+			if err != nil {
+				return nil, fmt.Errorf("could not marshal params: %w", err)
+			}
 
-				if field.IsValid() && field.CanSet() {
-					field.Set(reflect.ValueOf(value))
-				}
+			err = json.Unmarshal(contents, &instance)
+			if err != nil {
+				return nil, fmt.Errorf("could not unmarshal params: %w", err)
 			}
 
 			slog.Debug("tool.call", "name", structName, "instance", instance)
 
 			// Call the method on the struct
-			method := reflect.ValueOf(instance).MethodByName("Call")
-			if !method.IsValid() {
-				return nil, fmt.Errorf("method Call not found on struct %s", structName)
+			caller := instance.(Caller)
+			result, err := caller.Call(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("could not call method: %w", err)
 			}
+			slog.Debug("tool.call", "name", structName, "result", result)
 
-			values := method.Call([]reflect.Value{reflect.ValueOf(ctx)})
-			// return the first value and error
-			err = nil
-			if !values[1].IsNil() {
-				err = values[1].Interface().(error)
-			}
-
-			return values[0].Interface(), err
+			return result, nil
 		},
 	}, nil
 }
