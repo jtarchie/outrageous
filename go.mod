@@ -39,3 +39,5 @@ require (
 	golang.org/x/text v0.23.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/sashabaranov/go-openai => github.com/jtarchie/go-openai v0.0.0-20250403010503-db50e2bcce34

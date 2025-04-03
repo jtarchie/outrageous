@@ -21,7 +21,7 @@ var prompt string
 
 type Result struct {
 	Explanation string `json:"explanation" description:"The explanation of the assertion. This is a human readable explanation of the assertion. It should be a single sentence." required:"true"`
-	Status      Status `json:"status" description:"The status of the assertion. Either success or failure" required:"true"`
+	Status      Status `json:"status" description:"The status of the assertion. Either success or failure" required:"true" enum:"success,failure"`
 }
 
 func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
@@ -37,7 +37,6 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 	}
 
 	prop := schema.Properties["status"]
-	prop.Enum = []string{"success", "failure"}
 	schema.Properties["status"] = prop
 
 	var result Result
