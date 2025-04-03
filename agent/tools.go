@@ -70,8 +70,21 @@ func MustWrapStruct(description string, s Caller) Tool {
 }
 
 func WrapStruct(description string, s Caller) (Tool, error) {
-	structName := reflect.TypeOf(s).Name()
-	instance := reflect.New(reflect.TypeOf(s)).Interface()
+	// Get the type of s, handling both struct and pointer types
+	var structType reflect.Type
+	var structName string
+
+	valueType := reflect.TypeOf(s)
+	if valueType.Kind() == reflect.Ptr {
+		structType = valueType.Elem()
+		structName = structType.Name()
+	} else {
+		structType = valueType
+		structName = valueType.Name()
+	}
+
+	// Create a new instance - always as a pointer
+	instance := reflect.New(structType).Interface()
 
 	schema, err := jsonschema.GenerateSchemaForType(instance)
 	if err != nil {
@@ -87,8 +100,8 @@ func WrapStruct(description string, s Caller) (Tool, error) {
 		Func: func(ctx context.Context, params map[string]any) (any, error) {
 			slog.Debug("tool.call", "name", structName, "params", params)
 
-			// Create a new instance of the struct
-			instance := reflect.New(reflect.TypeOf(s)).Interface()
+			// Create a new instance of the struct as a pointer
+			instance := reflect.New(structType).Interface()
 
 			contents, err := json.Marshal(params)
 			if err != nil {
