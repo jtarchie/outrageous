@@ -3,7 +3,9 @@ module github.com/jtarchie/outrageous
 go 1.24.0
 
 require (
+	github.com/alecthomas/kong v1.10.0
 	github.com/anush008/fastembed-go v1.0.0
+	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/chromedp/chromedp v0.13.5
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/k0kubun/pp/v3 v3.4.1
