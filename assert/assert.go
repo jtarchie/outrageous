@@ -63,14 +63,20 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 		},
 	})
 
-	_, err = assertionAgent.Run(
-		context.Background(),
-		agent.Messages{
-			agent.Message{Role: "user", Content: assertion},
-		},
-	)
-	if err != nil {
-		return Result{}, fmt.Errorf("failed to run: %w", err)
+	for range 3 {
+		_, err = assertionAgent.Run(
+			context.Background(),
+			agent.Messages{
+				agent.Message{Role: "user", Content: assertion},
+			},
+		)
+		if err != nil {
+			return Result{}, fmt.Errorf("failed to run: %w", err)
+		}
+
+		if result.Status == "success" || result.Status == "failure" {
+			break
+		}
 	}
 
 	return result, nil

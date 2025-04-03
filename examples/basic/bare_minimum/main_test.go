@@ -17,9 +17,10 @@ func TestBareMinimum(t *testing.T) {
 	a.Expect(response.Messages).To(gomega.HaveLen(3))
 	a.Expect(response.Agent.Name()).To(gomega.Equal("HelpfulAgent"))
 
+	message := response.Messages[1].Content
 	result, err := assert.Agent(
-		fmt.Sprintf("This should be a greeting: %q", response.Messages[1].Content),
+		fmt.Sprintf("This should be a greeting: %q", message),
 	)
 	a.Expect(err).NotTo(gomega.HaveOccurred())
-	a.Expect(result.Status).To(gomega.Equal(assert.Success), result.Explanation)
+	a.Expect(result.Status).To(gomega.Equal(assert.Success), fmt.Sprintf("explain: %s, message: %s", result.Explanation, message))
 }
