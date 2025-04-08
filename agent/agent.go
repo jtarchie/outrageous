@@ -15,10 +15,11 @@ import (
 
 type Agent struct {
 	client       *client.Client
+	hooks        AgentHooks
 	instructions string
 	logger       *slog.Logger
 	name         string
-	hooks        AgentHooks
+	schema       json.Marshaler
 
 	Tools    Tools
 	Handoffs Tools
@@ -26,6 +27,29 @@ type Agent struct {
 
 func (agent *Agent) Name() string {
 	return agent.name
+}
+
+func (agent *Agent) SetSchema(value any) error {
+	var err error
+
+	schema, ok := value.(json.Marshaler)
+	if !ok {
+		schema, err = jsonschema.GenerateSchemaForType(value)
+		if err != nil {
+			return fmt.Errorf("could not generate schema: %w", err)
+		}
+	}
+
+	contents, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return fmt.Errorf("could not marshal schema: %w", err)
+	}
+
+	fmt.Println(string(contents))
+
+	agent.schema = schema
+
+	return nil
 }
 
 // AsTool creates a tool that returns the agent itself
@@ -71,6 +95,23 @@ func (agent *Agent) String() string {
 
 type Message = openai.ChatCompletionMessage
 type Messages []Message
+
+func ImageMessage(filename string) Message {
+	imageBase64Encoded, _ := Base64EncodeImage(filename)
+
+	return Message{
+		Role: "user",
+		MultiContent: []openai.ChatMessagePart{
+			{
+				Type: "image_url",
+				ImageURL: &openai.ChatMessageImageURL{
+					URL:    imageBase64Encoded,
+					Detail: openai.ImageURLDetailAuto,
+				},
+			},
+		},
+	}
+}
 
 type Response struct {
 	Messages Messages
@@ -257,12 +298,30 @@ func (agent *Agent) processToolCall(ctx context.Context, toolCall openai.ToolCal
 
 // getModelResponse gets a response from the LLM
 func (agent *Agent) getModelResponse(ctx context.Context, activeMessages Messages) (Message, error) {
+	var responseFormat *openai.ChatCompletionResponseFormat
+	if agent.schema != nil {
+		agent.logger.Debug("agent.schema", "agent_name", agent.name)
+		responseFormat = &openai.ChatCompletionResponseFormat{
+			Type: openai.ChatCompletionResponseFormatTypeJSONSchema,
+			JSONSchema: &openai.ChatCompletionResponseFormatJSONSchema{
+				Name:   "schema",
+				Schema: agent.schema,
+				// Strict: true,
+			},
+		}
+	}
+
 	completeTools := append(agent.Tools.AsTools(), agent.Handoffs.AsTools()...)
+	var toolChoice any = nil
+	if len(completeTools) > 0 {
+		toolChoice = "auto"
+	}
 	completion := openai.ChatCompletionRequest{
-		Model:      agent.client.ModelName(),
-		Messages:   activeMessages,
-		Tools:      completeTools,
-		ToolChoice: "auto",
+		Model:          agent.client.ModelName(),
+		Messages:       activeMessages,
+		Tools:          completeTools,
+		ToolChoice:     toolChoice,
+		ResponseFormat: responseFormat,
 	}
 
 	agent.logger.Debug("agent.requesting",

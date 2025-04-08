@@ -61,6 +61,14 @@ type Caller interface {
 	Call(ctx context.Context) (any, error)
 }
 
+func MustJSONSchema(s any) *jsonschema.Definition {
+	schema, err := jsonschema.GenerateSchemaForType(s)
+	if err != nil {
+		panic(fmt.Sprintf("could not generate schema: %v", err))
+	}
+	return schema
+}
+
 func MustWrapStruct(description string, s Caller) Tool {
 	tool, err := WrapStruct(description, s)
 	if err != nil {
