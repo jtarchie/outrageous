@@ -63,6 +63,7 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 		},
 	})
 
+	results := []Result{}
 	for range 3 {
 		_, err = assertionAgent.Run(
 			context.Background(),
@@ -75,8 +76,12 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 		}
 
 		if result.Status == "success" || result.Status == "failure" {
-			break
+			results = append(results, result)
 		}
+	}
+
+	if len(results) > 0 {
+		result = results[len(results)-1]
 	}
 
 	return result, nil
