@@ -10,18 +10,18 @@ require (
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/k0kubun/pp/v3 v3.4.1
 	github.com/lmittmann/tint v1.0.7
-	github.com/mattn/go-sqlite3 v1.14.27
+	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
 	github.com/samber/lo v1.49.1
-	github.com/sashabaranov/go-openai v1.38.1
+	github.com/sashabaranov/go-openai v1.38.2
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250403032234-65de8f5d025b // indirect
+	github.com/chromedp/cdproto v0.0.0-20250420205042-3f8c33ccbdec // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250223041408-d3c622f1b874 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
