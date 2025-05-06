@@ -13,12 +13,12 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
-	github.com/samber/lo v1.49.1
-	github.com/sashabaranov/go-openai v1.38.2
+	github.com/samber/lo v1.50.0
+	github.com/sashabaranov/go-openai v1.39.1
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250420205042-3f8c33ccbdec // indirect
+	github.com/chromedp/cdproto v0.0.0-20250429231605-6ed5b53462d4 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 // indirect
@@ -35,10 +35,10 @@ require (
 	github.com/sugarme/regexpset v0.0.0-20200920021344-4d4ec8eaf93c // indirect
 	github.com/sugarme/tokenizer v0.2.3-0.20230829214935-448e79b1ed65 // indirect
 	github.com/yalue/onnxruntime_go v1.19.0 // indirect
-	golang.org/x/net v0.39.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
-	golang.org/x/term v0.31.0 // indirect
-	golang.org/x/text v0.24.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
