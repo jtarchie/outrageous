@@ -118,13 +118,36 @@ type Response struct {
 	Agent    *Agent
 }
 
+// RunOption defines options for the Run function
+type RunOption func(*runOptions)
+
+type runOptions struct {
+	maxMessages int
+}
+
+// WithMaxMessages sets the maximum number of message iterations in the agent's run loop
+func WithMaxMessages(max int) RunOption {
+	return func(opts *runOptions) {
+		opts.maxMessages = max
+	}
+}
+
 // Run executes the agent's logic
 // It will continue to run until the agent has no more messages to process
 // or the maximum number of messages is reached.
-func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, error) {
+func (agent *Agent) Run(ctx context.Context, messages Messages, options ...RunOption) (*Response, error) {
 	logger := agent.logger
-	maxMessages := 10
 	activeAgent := agent
+
+	// Default options
+	opts := runOptions{
+		maxMessages: 10, // Default value for backward compatibility
+	}
+
+	// Apply provided options
+	for _, option := range options {
+		option(&opts)
+	}
 
 	// Initialize messages with system instruction
 	messages = append(
@@ -142,7 +165,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 
 	logger.Debug("agent.starting",
 		"agent_name", activeAgent.name,
-		"max_messages", maxMessages,
+		"max_messages", opts.maxMessages,
 		"initial_messages_count", len(messages),
 		"tools_count", len(activeAgent.Tools),
 		"handoffs_count", len(activeAgent.Handoffs),
@@ -156,7 +179,7 @@ func (agent *Agent) Run(ctx context.Context, messages Messages) (*Response, erro
 		}
 	}
 
-	for range maxMessages {
+	for range opts.maxMessages {
 		// Exit if we have no active agent
 		if activeAgent.IsZero() {
 			logger.Debug("agent.stopping", "reason", "agent_is_zero", "agent_name", activeAgent.name)
