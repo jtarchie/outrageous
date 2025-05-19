@@ -7,7 +7,7 @@ be added over time.
 
 Supports:
 
-- Clients support for models across Ollama, OpenAI, and Gemini (any OpenAI
+- Clients support for models across Ollama, OpenAI, Anthopic, OpenRouter, and Gemini (any OpenAI
   compatible API can be used)
 - Compose agents across different models -- i.e. Sensitive information can be
   used only on local models
