@@ -9,7 +9,7 @@ require (
 	github.com/chromedp/chromedp v0.13.6
 	github.com/georgysavva/scany/v2 v2.1.4
 	github.com/k0kubun/pp/v3 v3.4.1
-	github.com/lmittmann/tint v1.0.7
+	github.com/lmittmann/tint v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
@@ -18,10 +18,10 @@ require (
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250509201441-70372ae9ef75 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250521201632-aadd49e0822c // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250417205406-170dfdcf87d1 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250517221953-25912455fbc8 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
