@@ -13,7 +13,7 @@ import (
 	"github.com/onsi/gomega"
 )
 
-func TestAgentHandoff(t *testing.T) {
+func TestScraping(t *testing.T) {
 	t.SkipNow()
 
 	slog.SetDefault(slog.New(tint.NewHandler(os.Stderr, &tint.Options{

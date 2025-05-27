@@ -8,7 +8,7 @@ import (
 	"github.com/onsi/gomega"
 )
 
-func TestAgentHandoff(t *testing.T) {
+func TestFunctionCalling(t *testing.T) {
 	a := gomega.NewGomegaWithT(t)
 
 	response, err := FunctionCalling()
@@ -18,7 +18,7 @@ func TestAgentHandoff(t *testing.T) {
 	a.Expect(response.Agent.Name()).To(gomega.Equal("FunctionAgent"))
 
 	a.Expect(response.Messages[3].Role).To(gomega.Equal("tool"))
-	a.Expect(response.Messages[3].Name).To(gomega.Equal("GetWeather"))
+	a.Expect(response.Messages[3].Name).To(gomega.Equal("get_weather"))
 
 	a.Expect(response.Messages[4].Role).To(gomega.Equal("assistant"))
 	a.Expect(response.Messages[4].Name).To(gomega.Equal("FunctionAgent"))
