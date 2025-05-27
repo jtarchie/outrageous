@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/iancoleman/strcase"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
@@ -90,6 +91,8 @@ func WrapStruct(description string, s Caller) (Tool, error) {
 		structType = valueType
 		structName = valueType.Name()
 	}
+
+	structName = strcase.ToSnake(structName)
 
 	// Create a new instance - always as a pointer
 	instance := reflect.New(structType).Interface()

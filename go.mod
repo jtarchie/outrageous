@@ -8,6 +8,7 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/chromedp/chromedp v0.13.6
 	github.com/georgysavva/scany/v2 v2.1.4
+	github.com/iancoleman/strcase v0.3.0
 	github.com/k0kubun/pp/v3 v3.4.1
 	github.com/lmittmann/tint v1.1.0
 	github.com/mattn/go-sqlite3 v1.14.28

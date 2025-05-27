@@ -55,7 +55,7 @@ func TestToolWrapStruct(t *testing.T) {
 		tool, err := agent.WrapStruct("Test tool description", &TestStruct{})
 
 		g.Expect(err).To(gomega.BeNil())
-		g.Expect(tool.Name).To(gomega.Equal("TestStruct"))
+		g.Expect(tool.Name).To(gomega.Equal("test_struct"))
 		g.Expect(tool.Description).To(gomega.Equal("Test tool description"))
 		g.Expect(tool.Parameters).ToNot(gomega.BeNil())
 		g.Expect(tool.Func).ToNot(gomega.BeNil())
@@ -67,7 +67,7 @@ func TestToolWrapStruct(t *testing.T) {
 		tool, err := agent.WrapStruct("Non-pointer test", &TestStruct{})
 
 		g.Expect(err).To(gomega.BeNil())
-		g.Expect(tool.Name).To(gomega.Equal("TestStruct"))
+		g.Expect(tool.Name).To(gomega.Equal("test_struct"))
 	})
 
 	t.Run("should generate correct schema", func(t *testing.T) {
