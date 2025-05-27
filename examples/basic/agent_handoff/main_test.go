@@ -15,7 +15,7 @@ func TestAgentHandoff(t *testing.T) {
 	a.Expect(err).NotTo(gomega.HaveOccurred())
 
 	a.Expect(response.Messages).To(gomega.HaveLen(5))
-	a.Expect(response.Agent.Name()).To(gomega.Equal("SpanishAgent"))
+	a.Expect(response.Agent.Name()).To(gomega.Equal("spanish_agent"))
 
 	message := response.Messages[len(response.Messages)-1].Content
 	result, err := assert.Agent(

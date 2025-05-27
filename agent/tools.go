@@ -39,7 +39,7 @@ func (f *Tools) Get(name string) (Tool, bool) {
 
 func toFormattedName(name string) string {
 	// name Must be alphameric (a-z, A-Z, 0-9), underscores (_), dots (.) or dashes (-), with a maximum length of 64
-	return regexp.MustCompile(`[^a-zA-Z0-9_.-]`).ReplaceAllString(name, "")
+	return strcase.ToSnake(regexp.MustCompile(`[^a-zA-Z0-9_.-]`).ReplaceAllString(name, ""))
 }
 
 func (f Tools) AsTools() []openai.Tool {

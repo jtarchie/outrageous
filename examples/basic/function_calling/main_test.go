@@ -15,13 +15,13 @@ func TestFunctionCalling(t *testing.T) {
 	a.Expect(err).NotTo(gomega.HaveOccurred())
 
 	a.Expect(response.Messages).To(gomega.HaveLen(5))
-	a.Expect(response.Agent.Name()).To(gomega.Equal("FunctionAgent"))
+	a.Expect(response.Agent.Name()).To(gomega.Equal("function_agent"))
 
 	a.Expect(response.Messages[3].Role).To(gomega.Equal("tool"))
 	a.Expect(response.Messages[3].Name).To(gomega.Equal("get_weather"))
 
 	a.Expect(response.Messages[4].Role).To(gomega.Equal("assistant"))
-	a.Expect(response.Messages[4].Name).To(gomega.Equal("FunctionAgent"))
+	a.Expect(response.Messages[4].Name).To(gomega.Equal("function_agent"))
 
 	message := response.Messages[len(response.Messages)-1].Content
 	result, err := assert.Agent(
