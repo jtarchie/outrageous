@@ -101,6 +101,23 @@ func TestToolWrapStruct(t *testing.T) {
 		}))
 	})
 
+	t.Run("should handle default parameters", func(t *testing.T) {
+		g := gomega.NewWithT(t)
+
+		tool, err := agent.WrapStruct("Default params test", &TestStruct{
+			Name: "Default",
+			Age:  20,
+		})
+		g.Expect(err).To(gomega.BeNil())
+
+		result, err := tool.Func(context.Background(), nil)
+		g.Expect(err).To(gomega.BeNil())
+		g.Expect(result).To(gomega.Equal(map[string]interface{}{
+			"message": "Hello Default",
+			"age":     20,
+		}))
+	})
+
 	t.Run("should handle function errors", func(t *testing.T) {
 		g := gomega.NewWithT(t)
 

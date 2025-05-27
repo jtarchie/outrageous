@@ -11,6 +11,7 @@ import (
 	"github.com/iancoleman/strcase"
 	openai "github.com/sashabaranov/go-openai"
 	"github.com/sashabaranov/go-openai/jsonschema"
+	"github.com/tiendc/go-deepcopy"
 )
 
 type Tool struct {
@@ -78,12 +79,12 @@ func MustWrapStruct(description string, s Caller) Tool {
 	return tool
 }
 
-func WrapStruct(description string, s Caller) (Tool, error) {
+func WrapStruct(description string, src Caller) (Tool, error) {
 	// Get the type of s, handling both struct and pointer types
 	var structType reflect.Type
 	var structName string
 
-	valueType := reflect.TypeOf(s)
+	valueType := reflect.TypeOf(src)
 	if valueType.Kind() == reflect.Ptr {
 		structType = valueType.Elem()
 		structName = structType.Name()
@@ -114,12 +115,17 @@ func WrapStruct(description string, s Caller) (Tool, error) {
 			// Create a new instance of the struct as a pointer
 			instance := reflect.New(structType).Interface()
 
+			err = deepcopy.Copy(instance, src)
+			if err != nil {
+				return nil, fmt.Errorf("could not copy struct: %w", err)
+			}
+
 			contents, err := json.Marshal(params)
 			if err != nil {
 				return nil, fmt.Errorf("could not marshal params: %w", err)
 			}
 
-			err = json.Unmarshal(contents, &instance)
+			err = json.Unmarshal(contents, instance)
 			if err != nil {
 				return nil, fmt.Errorf("could not unmarshal params: %w", err)
 			}
