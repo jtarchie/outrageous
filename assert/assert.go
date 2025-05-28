@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/jtarchie/outrageous/agent"
+	"github.com/samber/lo"
 	"github.com/sashabaranov/go-openai/jsonschema"
 )
 
@@ -81,7 +82,13 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 	}
 
 	if len(results) > 0 {
-		result = results[len(results)-1]
+		// Count occurrences of each result
+		counts := lo.CountValues(results)
+
+		// Find the result with the most occurrences
+		result = lo.MaxBy(lo.Keys(counts), func(a, b Result) bool {
+			return counts[a] > counts[b]
+		})
 	}
 
 	return result, nil
