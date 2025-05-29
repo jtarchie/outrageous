@@ -37,9 +37,6 @@ func Agent(assertion string, opts ...agent.AgentOption) (Result, error) {
 		return Result{}, fmt.Errorf("could not generate schema: %w", err)
 	}
 
-	prop := schema.Properties["status"]
-	schema.Properties["status"] = prop
-
 	var result Result
 	assertionAgent.Tools.Add(agent.Tool{
 		Name:        "assertion",
