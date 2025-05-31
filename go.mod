@@ -15,12 +15,12 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
 	github.com/samber/lo v1.50.0
-	github.com/sashabaranov/go-openai v1.40.0
+	github.com/sashabaranov/go-openai v1.40.1
 	github.com/tiendc/go-deepcopy v1.6.0
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250527225801-8f9bc3ce9e31 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250530212709-4dcc110a7b92 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250517221953-25912455fbc8 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/schollz/progressbar/v3 v3.18.0 // indirect
 	github.com/sugarme/regexpset v0.0.0-20200920021344-4d4ec8eaf93c // indirect
 	github.com/sugarme/tokenizer v0.2.3-0.20230829214935-448e79b1ed65 // indirect
-	github.com/yalue/onnxruntime_go v1.19.0 // indirect
+	github.com/yalue/onnxruntime_go v1.20.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
