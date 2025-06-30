@@ -3,7 +3,7 @@ module github.com/jtarchie/outrageous
 go 1.24.0
 
 require (
-	github.com/alecthomas/kong v1.11.0
+	github.com/alecthomas/kong v1.12.0
 	github.com/anush008/fastembed-go v1.0.0
 	github.com/bmatcuk/doublestar/v4 v4.8.1
 	github.com/chromedp/chromedp v0.13.7
@@ -15,15 +15,15 @@ require (
 	github.com/onsi/gomega v1.37.0
 	github.com/philippgille/chromem-go v0.7.0
 	github.com/samber/lo v1.51.0
-	github.com/sashabaranov/go-openai v1.40.2
+	github.com/sashabaranov/go-openai v1.40.3
 	github.com/tiendc/go-deepcopy v1.6.1
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250621212827-3f1355e655b9 // indirect
+	github.com/chromedp/cdproto v0.0.0-20250630014756-b7288190f53c // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/go-json-experiment/json v0.0.0-20250517221953-25912455fbc8 // indirect
+	github.com/go-json-experiment/json v0.0.0-20250626171732-1a886bd29d1b // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.4.0 // indirect
